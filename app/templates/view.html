@@ -2,22 +2,79 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
-    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet'></link>
     <title>INFOVIS</title>
 
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet'></link>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     
-    <script src="/static/js/script.js">
+    
+    <script type="text/javascript">
+        /* Not working...
+        // Init
+        var mymap = L.map('map').setView([0, 0], 3);
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox/basic-v9',
+            tileSize: 512,
+            zoomOffset: -1,
+            accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
+        }).addTo(mymap);
         
+        // Plot map
+        d3.json("/getContinents")
+            .then(function(continents){
+                d3.json("/getCountries")
+                    .then(function(countries){
+                        d3.json("/getTect")
+                            .then(function(tect){
+                                // Now we can work here !
+                                console.log(continents);
+                                console.log(countries);
+                                console.log(tect);
+                            });
+                    });
+            });
+            */
+    </script>
+
+    <script type="text/javascript">
+        // function to draw plot about the earthquake
+        function plotEvolutionFrequencyForEarthquakes(){
+            d3.json("/getEarthquake")
+                .then(function(data){
+                    var x = [];
+                    for (let i = 0; i < 3; i++) {
+                        const element = data[i];
+                        tmp = element.intensity;
+                        alert(tmp);
+                    }
+                });
+        }
+
+        plotEvolutionFrequencyForEarthquakes();
     </script>
 
     <h1>Où (ne pas) aller dans le monde ?</h1>
 
-    <div id="map">
-        
+    <div id="map"></div>   <!-- Working example - Map with points -->
+    <div id="buttons_container">
+        <button id="Continents" class="beautiful_button">Continents</button>
+        <button id="Countries" class="beautiful_button">Countries</button>
+        <button id="Plates" class="beautiful_button">Plates</button>
+        <button id="Count_Cont" class="beautiful_button">Count_Cont</button>
     </div>
 
     <div id="plot_cause">

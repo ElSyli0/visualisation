@@ -24,5 +24,36 @@ def getVolcanoEvents():
     doc = open(path, )
     res = json.load(doc)
     doc.close()
-    #return json.dumps(res)
-    return jsonify(res)
+    return json.dumps(res)
+
+@app.route("/getContinents")
+def getContinents():
+    path = os.path.join("app", "static", "data", "continents.json")
+    doc = open(path, )
+    res = json.load(doc)
+    doc.close()
+    return json.dumps(res)
+
+@app.route("/getCountries")
+def getCountries():
+    path = os.path.join("app", "static", "data", "countries_continent.geojson")
+    doc = open(path, )
+    res = json.load(doc)
+    doc.close()
+    return json.dumps(res)
+
+@app.route("/getTect")
+def getTect():
+    path = os.path.join("app", "static", "data", "Tect.json")
+    doc = open(path, )
+    res = json.load(doc)
+    doc.close()
+    return json.dumps(res)
+
+@app.route("/getEarthquake")
+def getEarthquake():
+    path = os.path.join("app", "static", "data", "earthquakes_events.json")
+    doc = open(path, )
+    res = json.load(doc)
+    doc.close()
+    return json.dumps(res)
