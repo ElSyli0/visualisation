@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+		<title>Visu</title>   <!-- Set the title of the page here -->
+		<style type="text/css">   /* The CSS code goes here */
+
+			/* CSS code for the element that has the id map */
+
+			#map {
+				width: 1000px;   /* Dimensions of the map element */
+				height: 600px;
+			}
+
+			/* CSS code for the elements that have the class dot */
+			.beautiful_button {
+				background-color: steelblue;   /* The buttons are colored in steelblue */
+				border: none;   /* The buttons have no border */
+				color: white;   /* The text inside the buttons is white */
+				padding: 15px 32px;   /* Defines the space in pixels between the text inside the buttons and their edges */
+				text-align: center;   /* The text inside the buttons is centered */
+				font-size: 16px;   /* Font size of the text inside the buttons */
+			}
+
+			#buttons_container{
+				width: 1000px;   /* Dimensions of the buttons_container element */
+				text-align: center;   /* Centers the contents of the buttons_container element */
+			}
+
+		</style>
+		<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet'></link>   <!-- Import of the styles from Mapbox -->
+	</head>
+	<body>
+
+		<div id="map"></div>   <!-- Working example - Map with points -->
+		<div id="buttons_container">
+			<button id="Continents" class="beautiful_button">Continents</button>
+			<button id="Countries" class="beautiful_button">Countries</button>
+			<button id="Plates" class="beautiful_button">Plates</button>
+			<button id="Count_Cont" class="beautiful_button">Count_Cont</button>
+		</div>
+	</body>
+</html>
+<script src='https://d3js.org/d3.v3.min.js'></script>   <!-- d3.js library import (I personnaly use the version 3 but you can use another version. Some of the examples may not work correctly if the version is changed) -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script type="text/javascript">
+var mymap = L.map('map').setView([0, 0], 3);
+L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    maxZoom: 18,
+    id: 'mapbox/basic-v9',
+    tileSize: 512,
+    zoomOffset: -1,
+    accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
+}).addTo(mymap);
+	d3.json("continents.geojson", function(continents){   // The code in the function is executed only when the data is loaded. All code requiring that the data is fully loaded shoud come here
+		d3.json("countries_continent.geojson",function(countries){
+			d3.json("Tect.json",function(tect){
+			console.log(continents);
+			console.log(countries);
+			console.log(tect);
+			//console.log(countries.features.length);
+			function onEachFeature(feature, layer){
+			//continents
+				if (feature.properties && feature.properties.continent) {
+					layer.bindPopup(feature.properties.continent);
+				}
+				//Plates
+				if (feature.properties && feature.properties.PlateName) {
+					layer.bindPopup(feature.properties.PlateName);
+					layer.on("click", function(event){
+						mymap.fitBounds(event.target.getBounds());
+					});
+				}
+				//countries
+				if (feature.properties && feature.properties.name) {
+					layer.bindPopup(feature.properties.name);
+					layer.on("click", function(event){
+						mymap.fitBounds(event.target.getBounds());
+					});
+			}
+			};
+			var layer=L.geoJSON(countries,{onEachFeature: onEachFeature}).addTo(mymap);
+			var count=0;
+			/*
+			for (let i = 0; i < countries.features.length; i++) {
+				if countries.features[i].properties.continent ==="North America"{
+					count=count+1;
+				};
+			}
+			*/
+			var Count_NA=[],Count_EU=[],Count_SA=[],Count_AS=[],Count_AF=[],Count_OC=[],Count_SE=[],Count_AN=[];
+			console.log(countries.features.length);
+			for (let i = 0; i < countries.features.length; i++) {
+				if (countries.features[i].properties.continent =="Europe"){
+					Count_EU.push(countries.features[i]);
+
+				} else if (countries.features[i].properties.continent =="South America") {
+					Count_SA.push(countries.features[i]);
+				} else if (countries.features[i].properties.continent =="North America") {
+					Count_NA.push(countries.features[i]);
+				} else if (countries.features[i].properties.continent =="Africa") {
+					Count_AF.push(countries.features[i]);
+				} else if (countries.features[i].properties.continent =="Asia") {
+					Count_AS.push(countries.features[i]);
+				} else if (countries.features[i].properties.continent =="Oceania") {
+					Count_OC.push(countries.features[i]);
+				} else if(countries.features[i].properties.continent =="Antarctica") {
+					Count_AN.push(countries.features[i]);
+				} else if (countries.features[i].properties.continent =="Seven seas (open ocean)") {
+					Count_SE.push(countries.features[i]);
+				} else {
+					console.log(countries.features[i].properties.continent);
+				}
+			};
+			d3.select("#Continents")
+				.on("click",function(){
+					layer.clearLayers();
+					layer.addData(continents);
+				});
+			d3.select("#Countries")
+					.on("click",function(){
+						layer.clearLayers();
+						layer.addData(countries);
+					});
+			d3.select("#Plates")
+				.on("click",function(){
+					layer.clearLayers();
+					layer.addData(tect)
+				});
+			d3.select("#Count_Cont")
+				.on("click",function(){
+					layer.clearLayers();
+					layer.addData(continents);
+				});
+			});
+		});
+	});
+
+</script>
