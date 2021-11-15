@@ -87,20 +87,12 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 			}
 			};
 			var layer=L.geoJSON(countries,{onEachFeature: onEachFeature}).addTo(mymap);
-			var count=0;
 			/*
-			for (let i = 0; i < countries.features.length; i++) {
-				if countries.features[i].properties.continent ==="North America"{
-					count=count+1;
-				};
-			}
-			*/
 			var Count_NA=[],Count_EU=[],Count_SA=[],Count_AS=[],Count_AF=[],Count_OC=[],Count_SE=[],Count_AN=[];
 			console.log(countries.features.length);
 			for (let i = 0; i < countries.features.length; i++) {
 				if (countries.features[i].properties.continent =="Europe"){
 					Count_EU.push(countries.features[i]);
-
 				} else if (countries.features[i].properties.continent =="South America") {
 					Count_SA.push(countries.features[i]);
 				} else if (countries.features[i].properties.continent =="North America") {
@@ -119,6 +111,67 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 					console.log(countries.features[i].properties.continent);
 				}
 			};
+			console.log(Count_NA.length);
+			*/
+
+			var flagCont=[0,0,0,0,0,0,0];
+			var flag=0;
+			console.log(countries.features[0].properties.continent);
+			console.log(countries.features[1].properties.continent);
+			console.log(countries.features[2].properties.continent);
+			console.log(countries.features[3].properties.continent);
+			for (let i=0;flag<6;i++){
+				if (countries.features[i].properties.continent=="Europe" && flagCont[0]==0){
+					var ContEU = countries.features[i];
+					flag++;
+					flagCont[0]=1;
+				} else if (countries.features[i].properties.continent=="South America" && flagCont[1]==0){
+					var ContSA = countries.features[i];
+					flag++;
+					flagCont[1]=1;
+				} else if (countries.features[i].properties.continent=="North America" && flagCont[2]==0){
+					var ContNA = countries.features[i];
+					flag++;
+					flagCont[2]=1;
+				} else if (countries.features[i].properties.continent=="Africa" && flagCont[3]==0){
+					var ContAF = countries.features[i];
+					flag++;
+					flagCont[3]=1;
+				} else if (countries.features[i].properties.continent=="Asia" && flagCont[4]==0){
+					var ContAS = countries.features[i];
+					flag++;
+					flagCont[4]=1;
+				} else if (countries.features[i].properties.continent=="Oceania" && flagCont[5]==0){
+					var ContOC = countries.features[i];
+					flag++;
+					flagCont[5]=1;
+				} else if (countries.features[i].properties.continent=="Antartica" && flagCont[6]==0){
+					var ContAN = countries.features[i];
+					flag++;
+					flagCont[6]=1;
+				}
+			}
+			console.log(countries.features[11]);
+			for (let i = 0; i < countries.features.length; i++) {
+				console.log(i);
+				if (countries.features[i].properties.continent =="Europe"){
+					ContEU = turf.union(ContEU,countries.features[i]);
+				} else if (countries.features[i].properties.continent =="South America") {
+					ContSA = turf.union(ContSA,countries.features[i]);
+				} else if (countries.features[i].properties.continent =="North America") {
+					ContNA = turf.union(ContNA,countries.features[i]);
+				} else if (countries.features[i].properties.continent =="Africa") {
+					ContAF = turf.union(ContAF,countries.features[i]);
+				} else if (countries.features[i].properties.continent =="Asia") {
+					ContAS = turf.union(ContAS,countries.features[i]);
+				} else if (countries.features[i].properties.continent =="Oceania") {
+					ContOC = turf.union(ContOC,countries.features[i]);
+				} else if(countries.features[i].properties.continent =="Antarctica") {
+					ContAN= turf.union(ContAN,countries.features[i]);
+				}
+			}
+			var TestContinent = [ContEU,ContSA,ContNA,ContAF,ContAS,ContOC,ContAN];
+
 			d3.select("#Continents")
 				.on("click",function(){
 					layer.clearLayers();
@@ -137,7 +190,7 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 			d3.select("#Count_Cont")
 				.on("click",function(){
 					layer.clearLayers();
-					layer.addData(continents);
+					//layer.addData(TestContinent);
 				});
 			});
 		});
