@@ -5,6 +5,7 @@
     <title>INFOVIS</title>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
@@ -32,7 +33,7 @@
             width: 700px;   /* Dimensions of the barchart element */
             height: 500px;   /* Note : barchart is an svg, thus it is important to set its size, otherwise the elements inside it won't appear */
         }
-        button.next_btn, button.prev_btn {
+        button.next_fact, button.prev_fact, button.next_csq, button.prev_csq {
             border-radius: 5px;
             color: white;
             background-color: navy;
@@ -42,7 +43,7 @@
             width: 70px;
             display: block;
         }
-        button.next_btn:hover, button.prev_btn:hover{
+        button.next_fact:hover, button.prev_fact:hover, button.next_csq:hover, button.prev_csq:hover{
             background-color: blue;
         }
     </style>
@@ -178,12 +179,108 @@
                         tmp["nbr"] = countInstance(i, x)
                         y.push(tmp);
                     }
-                    console.log(y);
                     drawBartChart(y);
                 });
         }
 
-        plotEvolutionFrequencyForEarthquakes();
+        
+        // Tout ce qui sera dans cette fonction sera possible une fois que la page sera chargée
+        $(document).ready(function(){
+            plotEvolutionFrequencyForEarthquakes();
+            $("button.next_fact").click(function(){
+                var id = $(this).attr("id").replace("next_facts_", "");
+                var tmp = (id)%3;
+                alert(tmp);
+                switch (tmp) {
+                    case 1:
+                        alert("Affichage graph de type 2")
+                        $(this).attr("id", )
+                        break;
+                    case 2:
+                        alert("Affichage graph de type 3")
+                        break;
+                    case 0:
+                        alert("Affichage graph de type 1")
+                    default:
+                        break;
+                }
+                id *= 1;
+                id++;
+                id +=""
+                var txt = "next_facts_"+id;
+                $(this).attr("id", txt);
+            });
+            $("button.prev_fact").click(function(){
+                var id = $(this).attr("id").replace("prev_facts_", "");
+                var tmp = (id)%3;
+                alert(tmp);
+                switch (tmp) {
+                    case 1:
+                        alert("Affichage graph de type 2")
+                        $(this).attr("id", )
+                        break;
+                    case 2:
+                        alert("Affichage graph de type 3")
+                        break;
+                    case 0:
+                        alert("Affichage graph de type 1")
+                    default:
+                        break;
+                }
+                id *= 1;
+                id++;
+                id +=""
+                var txt = "prev_facts_"+id;
+                $(this).attr("id", txt);
+            });
+            $("button.next_csq").click(function(){
+                var id = $(this).attr("id").replace("next_csq_", "");
+                var tmp = (id)%3;
+                alert(tmp);
+                switch (tmp) {
+                    case 1:
+                        alert("Affichage graph de type 2")
+                        $(this).attr("id", )
+                        break;
+                    case 2:
+                        alert("Affichage graph de type 3")
+                        break;
+                    case 0:
+                        alert("Affichage graph de type 1")
+                    default:
+                        break;
+                }
+                id *= 1;
+                id++;
+                id +=""
+                var txt = "next_csq_"+id;
+                $(this).attr("id", txt);
+            });
+            $("button.prev_csq").click(function(){
+                var id = $(this).attr("id").replace("prev_csq_", "");
+                var tmp = (id)%3;
+                alert(tmp);
+                switch (tmp) {
+                    case 1:
+                        alert("Affichage graph de type 2")
+                        $(this).attr("id", )
+                        break;
+                    case 2:
+                        alert("Affichage graph de type 3")
+                        break;
+                    case 0:
+                        alert("Affichage graph de type 1")
+                    default:
+                        break;
+                }
+                id *= 1;
+                id++;
+                id += ""
+                var txt = "prev_csq_"+id;
+                $(this).attr("id", txt);
+            });
+        })
+
     </script>
 
     <h1>Où (ne pas) aller dans le monde ?</h1>
@@ -200,19 +297,18 @@
     <div class="facts">
         <svg id="plot_facts"></svg>
         <div class="nav_btn">
-            <button class="next_btn" id="next_facts_1">&rarr;</button>
-            <button class="prev_btn" id="prev_facts_1">&larr;</button>
-        </div>
-    </div>
-
-    <div class="csq">
-        <svg id="plot_csq"></svg>
-        <div class="nav_btn">
-            <button class="next_btn" id="next_facts_1">&rarr;</button>
-            <button class="prev_btn" id="prev_facts_1">&larr;</button>
+            <button class="next_fact" id="next_facts_1">&rarr;</button>
+            <button class="prev_fact" id="prev_facts_1">&larr;</button>  
         </div>
     </div>
     
 
+    <div class="csq">
+        <svg id="plot_csq"></svg>
+        <div class="nav_btn">
+            <button class="next_csq" id="next_csq_1">&rarr;</button>
+            <button class="prev_csq" id="prev_csq_1">&larr;</button>  
+        </div>
+    </div>
 </body>
 </html>
