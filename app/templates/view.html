@@ -19,19 +19,20 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <style type="text/css">
         /* BAR CHART */
+        /*
         .bar {
-            fill: steelblue;   /* Colors the bars of the bar chart in steelblue */
+            fill: steelblue;   
         }
         .axis text {
-            font: 10px sans-serif;   /* Sets the font family to sans-serif the the font-size to 10px */
+            font: 10px sans-serif;   
         }
         .axis path {
-            fill: none;   /* Otherwise, the axis would look like a thick line */
-            stroke: #000000;   /* Sets the color of the axis to black */
+            fill: none;   
+            stroke: #000000;  
         }
         #plot_facts {
-            width: 700px;   /* Dimensions of the barchart element */
-            height: 500px;   /* Note : barchart is an svg, thus it is important to set its size, otherwise the elements inside it won't appear */
+            width: 700px;   
+            height: 500px; 
         }
         button.next_fact, button.prev_fact, button.next_csq, button.prev_csq {
             border-radius: 5px;
@@ -46,40 +47,43 @@
         button.next_fact:hover, button.prev_fact:hover, button.next_csq:hover, button.prev_csq:hover{
             background-color: blue;
         }
+        */
+        #map { 
+				width: 1000px;   /* Dimensions of the map element */
+				height: 600px;
+			}
+
+			/* CSS code for the elements that have the class prefecture */
+
+			.country {
+				cursor: default;   /* Changes the look of the cursor when it hovers the element */
+				fill: #638abd;   /* Color */
+				fill-opacity: 0.6;   /* Transparency, from 0 (invisible) to 1 (opaque) */
+				stroke: #004d60;   /* Border color */
+				stroke-width: 1;   /* Border width in pixels */
+			}
+
+			/* CSS code for the elements that have the class selected_prefecture */
+
+			.selected_country {
+				cursor: default;   /* Changes the look of the cursor when it hovers the element */
+				fill: #ed5a3b;   /* Color */
+				fill-opacity: 0.8;   /* Transparency, from 0 (invisible) to 1 (opaque) */
+				stroke: #654321;   /* Border color */
+				stroke-width: 1;   /* Border width in pixels */
+			}
+
+			/* CSS code for the element that has the id polygons_container */
+
+			#polygons_container {
+				position: absolute;
+				width: 100%;   /* Width of the element is 100% of the width of its parent */
+				height: 100%;   /* Height of the element is 100% of the width of its parent */
+			}
+
     </style>
 </head>
 <body>
-    
-    
-    <script type="text/javascript">
-        /* Not working...
-        // Init
-        var mymap = L.map('map').setView([0, 0], 3);
-        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-            maxZoom: 18,
-            id: 'mapbox/basic-v9',
-            tileSize: 512,
-            zoomOffset: -1,
-            accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
-        }).addTo(mymap);
-        
-        // Plot map
-        d3.json("/getContinents")
-            .then(function(continents){
-                d3.json("/getCountries")
-                    .then(function(countries){
-                        d3.json("/getTect")
-                            .then(function(tect){
-                                // Now we can work here !
-                                console.log(continents);
-                                console.log(countries);
-                                console.log(tect);
-                            });
-                    });
-            });
-        */
-    </script>
 
     <script type="text/javascript">
         // 
@@ -285,15 +289,13 @@
 
     <h1>Où (ne pas) aller dans le monde ?</h1>
 
-    <!--<div id="map"></div> -->  <!-- Working example - Map with points -->
-    <!--
+    <div id="map"></div>  <!-- Working example - Map with points -->
     <div id="buttons_container">
         <button id="Continents" class="beautiful_button">Continents</button>
         <button id="Countries" class="beautiful_button">Countries</button>
         <button id="Plates" class="beautiful_button">Plates</button>
         <button id="Count_Cont" class="beautiful_button">Count_Cont</button>
     </div>
-    -->
     <div class="facts">
         <svg id="plot_facts"></svg>
         <div class="nav_btn">
@@ -312,3 +314,117 @@
     </div>
 </body>
 </html>
+
+<script type="text/javascript">
+    /*
+    // Access Token
+    mapboxgl.accessToken = "pk.eyJ1IjoiZWxzeWxpMCIsImEiOiJja3cyNmpvY3kxc2txMm9sY21jeGVkYTRkIn0.rn01oVBCWrwWDU6CWLTt_g";
+    // Nouvelle instance Map()
+    const map = new mapboxgl.Map({
+        container : "map",
+        style: "mapbox://styles/mapbox/light-v9",
+        center: [4.35, 50.85],
+        zoom : 1
+    });
+    // Ajout des outils de contrôles
+    map.addControl(new mapboxgl.NavigationControl({
+        position:"top-left"
+    }))
+    // Création du conteneur
+    const container = map.getCanvasContainer()
+    console.log(container)
+    const svg = d3.select(container)
+        .append("svg")
+            .attr("id", "polygons_container");
+    // Création du chemin pour la projection des polygones
+    let test = d3.geoPath();
+    let path = d3.geoPath().projection(d3.geoTransform({point: projectPoint}));
+    function projectPoint(lon, lat) {
+		let point = map.project(new mapboxgl.LngLat(lon, lat));
+		this.stream.point(point.x, point.y);
+	}
+    d3.json("/getContinents")
+        .then(function(continents){
+            d3.json("/getCountries")
+                .then(function(countries){
+                    d3.json("/getTect")
+                        .then(function(tect){
+                            // Now we can work here !
+                            console.log(continents);
+                            console.log(countries);
+                            console.log(tect);
+                            drawPolygons(countries.features)
+                            // function
+                            function drawPolygons(polygons){
+                                document.getElementById("polygons_container").innerHTML = "";
+                                // zones is the selection holding the polygons
+                                let zones = svg.selectAll("path")
+                                    .data(polygons);
+                                // For each polygon, a path is appended
+                                zones.enter().append("path")
+                                    .attr("class", "country")   // The appended path have the class prefecture
+                                    .on("mouseover", function(d) {
+                                        d3.select(this).attr("class", "selected_country");
+                                    })                  
+                                    .on("mouseout", function(d) {
+                                        d3.select(this).attr("class", "country");
+                                    })
+                                    .append("title")   // A title is added to the path (when the mouse goes over a path, some text will show)
+                                        .text(function(d){   // Text of the mouseover title
+                                            return d.properties.name;   // The text displayed for a path is the name of the prefecture it represents
+                                        });
+                                // This function renders the polygons on the map. Basically, it handles the projection of every polygon
+                                function render(){
+                                    // Remember that zones is a selection of polygons. The .attr("d") is executed once for each path in zones
+                                    zones
+                                        .attr("d", path)
+                                        
+                                }
+                                // render() is called when the event viewreset of the map is triggered
+                                // viewreset means that the content of the layer needs to be redrawn (e.g. zoom)
+                                map.on("viewreset", render);
+                                // render() is also called when the map is moved (navigation without zoom)
+                                map.on("move", render);
+                                // render() is called once for initial placement of the polygons
+                                render();
+                            }
+                        });
+                });
+        });
+        */
+</script>
+
+<script type="text/javascript">
+    // Initialisation
+    mapboxgl.accessToken = "pk.eyJ1IjoiZWxzeWxpMCIsImEiOiJja3cyNmpvY3kxc2txMm9sY21jeGVkYTRkIn0.rn01oVBCWrwWDU6CWLTt_g";
+    var map = new mapboxgl.Map({
+        container : "map",
+        style: "mapbox://styles/mapbox/light-v9",
+        center: [4.35, 50.85],
+        zoom : 1
+    });
+    var container = map.getCanvasContainer();
+    var svg = d3
+        .select(container)
+        .append("svg")
+        .attr("width", "1000px")
+        .attr("height", "600px")
+        .style("position", "absolute")
+        .style("z-index", 2)
+        .attr("id", "polygons_container");
+    // Fonction de projection pour communication entre mapbox et d3
+    function projection(d){
+        return map.project(new mapboxgl.LngLat(d[0], d[1]))
+    }
+    // Load data
+    d3.json("/getTect")
+        .then(function(tect){
+            console.log(tect);
+            var poly = svg
+                .selectAll("poly")
+                .data(tect)
+                .enter()
+                .append("")
+        });
+
+</script>
