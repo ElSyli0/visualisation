@@ -16,6 +16,36 @@
     integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
     crossorigin=""/>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style type="text/css">
+        /* BAR CHART */
+        .bar {
+            fill: steelblue;   /* Colors the bars of the bar chart in steelblue */
+        }
+        .axis text {
+            font: 10px sans-serif;   /* Sets the font family to sans-serif the the font-size to 10px */
+        }
+        .axis path {
+            fill: none;   /* Otherwise, the axis would look like a thick line */
+            stroke: #000000;   /* Sets the color of the axis to black */
+        }
+        #plot_facts {
+            width: 700px;   /* Dimensions of the barchart element */
+            height: 500px;   /* Note : barchart is an svg, thus it is important to set its size, otherwise the elements inside it won't appear */
+        }
+        button.next_btn, button.prev_btn {
+            border-radius: 5px;
+            color: white;
+            background-color: navy;
+            font-family: arial, sans-serif;
+            height: 30px;
+            text-decoration: none;
+            width: 70px;
+            display: block;
+        }
+        button.next_btn:hover, button.prev_btn:hover{
+            background-color: blue;
+        }
+    </style>
 </head>
 <body>
     
@@ -47,20 +77,109 @@
                             });
                     });
             });
-            */
+        */
     </script>
 
     <script type="text/javascript">
+        // 
+        function countInstance(val, x){
+            count = 0;
+            for (let i = 0; i < x.length; i++) {
+                if(x[i] == val) count ++;
+            }
+            return count;
+        }
+        //
+        function drawBartChart(data){
+            // Vide le conteneur svg
+            document.getElementById("plot_facts").innerHTML = "";
+            // Dimension
+            let margin = {top: 20, right: 20, bottom: 70, left: 60};
+            let width = document.getElementById("plot_facts").getBoundingClientRect().width - margin.left - margin.right;
+		    let height = document.getElementById("plot_facts").getBoundingClientRect().height - margin.top - margin.bottom;
+            // Gestion de l'axe des abscisses
+            let x = d3.scaleBand()
+			    .range([0, width], .1);
+            x.domain(data.map(function(d){   // data.map(function) returns an array with the same number of entries that the dataset has. For each entry (the parameter d refers to one entry) of the dataset, the transformation defined inside function is applied. The result is the corresponding entry in the array resulting from data.map
+			    return d.intensity;   // The transformation consists of returning d.agent, that is, the agent in the entry d. Thus, it consists of scrapping off the sales amount to keep only the agent's name
+		    }));
+            // Gestion de l'axe des ordonnées
+            let y = d3.scaleLinear()
+			    .range([height, 0]);
+            y.domain([0, d3.max(data, function(d){   // This returns the maximum (d3.max) number encountered after keeping only the sales from the dataset
+                return d.nbr;
+            })]);
+            // Affichage des abscisses
+            let xAxis = d3.axisBottom(x)
+            let yAxis = d3.axisLeft(y)
+            // Affichage des éléments
+            let chart = d3.select("#plot_facts")
+			    .append("g")   // A g element is appended to the barchart svg. It will contain all the graphical elements of the visualization
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
+            chart.append("g")
+                .attr("class", "x axis")   // The classes x and axis are assigned to the g element. Thus, the g element has the styles defined for x and axis classes in the CSS code
+                .attr("transform", "translate(0," + height + ")")   // The origin of the bar chart is at the bottom left, but the origin of a SVG element is its top left corner. Thus, the x axis needs to be moved down by height pixels in order to appear at the bottom of the chart
+                .call(xAxis)   // Define that it is the x axis in the g element
+                .selectAll("text")   // A selection is made to gather all the text elements in the x axis (that is, the ticks labels)
+				    .style("text-anchor", "middle")   // The text elements are attached at the middle of their tick
+				    .attr("dy", "0.5em");
+            chart.append("g")
+			    .attr("class", "y axis")   // The classes y and axis are assigned to the g element. Thus, the g element has the styles defined for y and axis classes in the CSS code
+			    .call(yAxis);   // Define that it is the y axis in the g element
+            //
+            chart.selectAll(".bar")
+                .data(data)   // The dataset data is assigned. Elements with the class bar will be created accordingly
+                .enter().append("rect")   // .enter() defines new data elements for which a visual element counterpart (in the present case, a rectangle) needs to be created. The code after .enter() will be executed on each of these visual elements (hence, once per entry in the dataset)
+                    .attr("class", "bar")   // The rectangles have the class bar
+                    .attr("x", function(d){   // The x position of the rectangle is determined by the agent to which the rectangle corresponds
+                        return x(d.intensity);
+                    })
+                    .attr("y", function(d){
+                        return y(d.nbr);   // By default, the bars are aligned to the top of the chart (remember, the origin of a SVG element is at its top left corner). y(d.sales) is the size of the gap between the bar aligned to the top and the x axis
+                    })
+                    .attr("height", function(d){   // The height of each rectangle is computed accordingly to the sales
+                        return height - y(d.nbr);
+                    })
+                    .attr("width", x.bandwidth())   // The width of a bar depends on the space allocated to the bars on the x axis
+            // Label pour abscisses
+            chart.append("text")						 
+                .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top + 30) + ")")   // The label is translated rightwards by half the width of the chart (thus, it will appear at the middle)
+                .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
+                .text("Intensité");   // Label
+            // Label pour ordonnées
+            chart.append("text")
+                .attr("transform", "rotate(-90)")   // The label is rotated by -90 degrees in order to be written along the y axis
+                .attr("y", 0 - margin.left)   // The element was rotated by -90 degrees -> attention to the coordinates to translate
+                .attr("x", 0 - (height / 2))
+                .attr("dy", "1em")   
+                .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
+                .text("Occurence");   // Label
+        }
+
         // function to draw plot about the earthquake
         function plotEvolutionFrequencyForEarthquakes(){
             d3.json("/getEarthquake")
                 .then(function(data){
                     var x = [];
-                    for (let i = 0; i < 3; i++) {
+                    for (let i = 0; i < data.length; i++) {
                         const element = data[i];
-                        tmp = element.intensity;
-                        alert(tmp);
+                        var tmp = element.intensity;
+                        if(tmp){
+                            x.push(tmp);
+                        }
                     }
+                    // Histogram
+                    var max_x = d3.max(x);
+                    var min_x = d3.min(x);
+                    var y = [];
+                    for (let i = min_x; i <= max_x; i++) {
+                        var tmp = {};
+                        tmp["intensity"] = i;
+                        tmp["nbr"] = countInstance(i, x)
+                        y.push(tmp);
+                    }
+                    console.log(y);
+                    drawBartChart(y);
                 });
         }
 
@@ -69,20 +188,29 @@
 
     <h1>Où (ne pas) aller dans le monde ?</h1>
 
-    <div id="map"></div>   <!-- Working example - Map with points -->
+    <!--<div id="map"></div> -->  <!-- Working example - Map with points -->
+    <!--
     <div id="buttons_container">
         <button id="Continents" class="beautiful_button">Continents</button>
         <button id="Countries" class="beautiful_button">Countries</button>
         <button id="Plates" class="beautiful_button">Plates</button>
         <button id="Count_Cont" class="beautiful_button">Count_Cont</button>
     </div>
-
-    <div id="plot_cause">
-        <p>to do...</p>
+    -->
+    <div class="facts">
+        <svg id="plot_facts"></svg>
+        <div class="nav_btn">
+            <button class="next_btn" id="next_facts_1">&rarr;</button>
+            <button class="prev_btn" id="prev_facts_1">&larr;</button>
+        </div>
     </div>
 
-    <div id="plot_csq">
-        <p>to do...</p>
+    <div class="csq">
+        <svg id="plot_csq"></svg>
+        <div class="nav_btn">
+            <button class="next_btn" id="next_facts_1">&rarr;</button>
+            <button class="prev_btn" id="prev_facts_1">&larr;</button>
+        </div>
     </div>
     
 

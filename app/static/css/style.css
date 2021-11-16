@@ -19,3 +19,18 @@
     width: 1000px;   /* Dimensions of the buttons_container element */
     text-align: center;   /* Centers the contents of the buttons_container element */
 }
+/* BAR CHART */
+.bar {
+    fill: steelblue;   /* Colors the bars of the bar chart in steelblue */
+}
+.axis text {
+    font: 10px sans-serif;   /* Sets the font family to sans-serif the the font-size to 10px */
+}
+.axis path {
+    fill: none;   /* Otherwise, the axis would look like a thick line */
+    stroke: #000000;   /* Sets the color of the axis to black */
+}
+#plot_facts {
+    width: 1000px;   /* Dimensions of the barchart element */
+    height: 600px;   /* Note : barchart is an svg, thus it is important to set its size, otherwise the elements inside it won't appear */
+}
