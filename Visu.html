@@ -5,6 +5,8 @@
 		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
     integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
     crossorigin=""/>
+		<link rel="stylesheet" href="http://code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css">
+		<link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" rel="stylesheet">
 		<title>Visu</title>   <!-- Set the title of the page here -->
 		<style type="text/css">   /* The CSS code goes here */
 
@@ -24,23 +26,44 @@
 				text-align: center;   /* The text inside the buttons is centered */
 				font-size: 16px;   /* Font size of the text inside the buttons */
 			}
-
+			.Event_button {
+				background-color: steelblue;   /* The buttons are colored in steelblue */
+				border: none;   /* The buttons have no border */
+				color: white;   /* The text inside the buttons is white */
+				padding: 15px 32px;   /* Defines the space in pixels between the text inside the buttons and their edges */
+				text-align: center;   /* The text inside the buttons is centered */
+				font-size: 16px;   /* Font size of the text inside the buttons */
+			}
 			#buttons_container{
 				width: 1000px;   /* Dimensions of the buttons_container element */
 				text-align: center;   /* Centers the contents of the buttons_container element */
 			}
+			#checkboxesContainer{
+				width : 1000px;
+				text-align: center;
+			}
 
 		</style>
 		<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet'></link>   <!-- Import of the styles from Mapbox -->
+		<link rel="stylesheet" href="css/leaflet.awesome-markers.css"></link>
 	</head>
 	<body>
+		<ion-icon name="earth"></ion-icon>
 
 		<div id="map"></div>   <!-- Working example - Map with points -->
 		<div id="buttons_container">
+			<h2>Choix des délimitations</h2>
 			<button id="Continents" class="beautiful_button">Continents</button>
 			<button id="Countries" class="beautiful_button">Countries</button>
 			<button id="Plates" class="beautiful_button">Plates</button>
-			<button id="Count_Cont" class="beautiful_button">Count_Cont</button>
+			<button id="ClearDelim" class="beautiful_button">Clear_Delim</button>
+		</div>
+		<div id="checkboxesContainer">
+			<h2>Choix des events</h2>
+				<button id="Earthquake" class="Event_button" value="off">Earthquake</button>
+				<button id="Tsunami" class="Event_button" value="off">Tsunami</button>
+				<button id="Volcano" class="Event_button" value="off">Volcano</button>
+				<button id="ClearEvents" class="Event_button" value="off">Clear</button>
 		</div>
 	</body>
 </html>
@@ -49,22 +72,147 @@
    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
    crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script src="js/leaflet.awesome-markers.js"></script>
 <script type="text/javascript">
 var mymap = L.map('map').setView([0, 0], 3);
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
-    id: 'mapbox/basic-v9',
+    id: 'mapbox/light-v10',
     tileSize: 512,
     zoomOffset: -1,
     accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
 }).addTo(mymap);
+function getGeoJSON_E(DataJson){
+	let features =Array();
+	for (let i=0;i<DataJson.length;i++){
+		if (DataJson[i].longitude && DataJson[i].latitude) {
+			let point={type:"Feature",
+							geometry : {
+								type: "Point",
+								coordinates : [DataJson[i].longitude, DataJson[i].latitude]
+							},
+							properties : {
+								id : DataJson[i].id,
+								intensity : DataJson[i].intensity,
+							}
+			}
+			features.push(point);
+		} /*else {
+			console.log(i);
+			console.log(DataJson[i]);
+		} */
+	}
+	return features
+}
+function getGeoJSON_T(DataJson){
+	let features =Array();
+	for (let i=0;i<DataJson.length;i++){
+		if (DataJson[i].longitude && DataJson[i].latitude) {
+			let point={type:"Feature",
+							geometry : {
+								type: "Point",
+								coordinates : [DataJson[i].longitude, DataJson[i].latitude]
+							},
+							properties : {
+								id : DataJson[i].id,
+								intensity : DataJson[i].intensity,
+							}
+			}
+			features.push(point);
+		} /*else {
+			console.log(i);
+			console.log(DataJson[i]);
+		} */
+	}
+	return features
+}
+function getGeoJSON_V(DataJson){
+	let features =Array();
+	for (let i=0;i<DataJson.length;i++){
+		if (DataJson[i].longitude && DataJson[i].latitude) {
+			let point={type:"Feature",
+							geometry : {
+								type: "Point",
+								coordinates : [DataJson[i].longitude, DataJson[i].latitude]
+							},
+							properties : {
+								id : DataJson[i].id,
+								intensity : DataJson[i].intensity,
+							}
+			}
+			features.push(point);
+		} /*else {
+			console.log(i);
+			console.log(DataJson[i]);
+		} */
+	}
+	return features
+}
 	d3.json("continents.geojson", function(continents){   // The code in the function is executed only when the data is loaded. All code requiring that the data is fully loaded shoud come here
-		d3.json("countries_continent.geojson",function(countries){
-			d3.json("Tect.json",function(tect){
+	d3.json("countries_continent.geojson",function(countries){
+	d3.json("Tect.json",function(tect){
+	d3.json("earthquakes_events.json",function(Da_ear){
+	d3.json("tsunamis_events.json",function(Da_tsu){
+	d3.json("volcano_locations.json",function(Da_vol){
+		/*
 			console.log(continents);
 			console.log(countries);
 			console.log(tect);
+			console.log(Da_ear);
+			console.log(Da_tsu);
+			console.log(Da_vol);
+		*/
+		// Creates a red marker with the coffee icon
+var MarkerTsu = L.AwesomeMarkers.icon({
+	icon: 'tint',
+	markerColor: 'darkblue',
+	prefix:'fa',
+	iconColor:'white',
+});
+var MarkerEar = L.AwesomeMarkers.icon({
+	icon:'globe',
+	markerColor: 'beige',
+	prefix:'fa',
+	iconColor:'black',
+});
+var MarkerVol = L.AwesomeMarkers.icon({
+	icon:'fire',
+	markerColor: 'darkred',
+	prefix:'fa',
+	iconColor:'white',
+})
+
+
+			let Data_earthquake ={type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
+			let Data_tsunami ={type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
+			let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol)};
+
+			var style_polygons = {
+				"fillColor" :'white',
+				"color" : "#f55919",
+				"opacity" : 0.7,
+				"dashArray": '20,10'
+			};
+			/*
+			var style_points = {
+
+			}
+			*/
+			/* test de mise en couleur des boutons
+			let EventChoice = d3.select("#checkboxesContainer")
+			EventChoice.append("g")
+				.attr("class")
+			EventChoice.select(".Event_button")
+				.enter().append("Eventbutt")
+					.attr("class","Event_button")
+					.on("click", function(){
+						d3.select(this)
+							.style("fill", orange);
+							this.value="on";
+				})
+				*/
+
 			//console.log(countries.features.length);
 			function onEachFeature(feature, layer){
 			//continents
@@ -87,7 +235,13 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 			}
 			};
 			var layer=L.geoJSON(countries,{onEachFeature: onEachFeature}).addTo(mymap);
+			layer.setStyle(style_polygons);
+			var layerevents=L.geoJSON().addTo(mymap);
+			L.marker([0.0,0.0], {icon: MarkerEar}).addTo(mymap);
+			L.marker([0.0,15], {icon: MarkerTsu}).addTo(mymap);
+			L.marker([15,0.0], {icon: MarkerVol}).addTo(mymap);
 			/*
+			//list of countries for each continent
 			var Count_NA=[],Count_EU=[],Count_SA=[],Count_AS=[],Count_AF=[],Count_OC=[],Count_SE=[],Count_AN=[];
 			console.log(countries.features.length);
 			for (let i = 0; i < countries.features.length; i++) {
@@ -113,13 +267,10 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 			};
 			console.log(Count_NA.length);
 			*/
-
+			/*
+			// get first country for each continent
 			var flagCont=[0,0,0,0,0,0,0];
 			var flag=0;
-			console.log(countries.features[0].properties.continent);
-			console.log(countries.features[1].properties.continent);
-			console.log(countries.features[2].properties.continent);
-			console.log(countries.features[3].properties.continent);
 			for (let i=0;flag<6;i++){
 				if (countries.features[i].properties.continent=="Europe" && flagCont[0]==0){
 					var ContEU = countries.features[i];
@@ -151,6 +302,24 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 					flagCont[6]=1;
 				}
 			}
+			*/
+			/*
+			//suppose to trunc geopoints
+			var flag=0;
+			for (let i=0; i<countries.features.length;i++){
+				for (let j=0;j<countries.features[i].geometry.coordinates.length;j++) {
+					for (let k=0;k<countries.features[i].geometry.coordinates[j].length;k++) {
+						for (let l=0;l<countries.features[i].geometry.coordinates[j][k];l++) {
+							countries.features[i].geometry.coordinates[j][k][l].toFixed(4);
+						}
+					}
+				}
+			}
+			console.log(countries.features[0].geometry.coordinates[0][0][0]);
+			console.log(flag);
+			*/
+			/*
+			// suppose to make polygons union for each continent
 			console.log(countries.features[11]);
 			for (let i = 0; i < countries.features.length; i++) {
 				console.log(i);
@@ -166,12 +335,10 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 					ContAS = turf.union(ContAS,countries.features[i]);
 				} else if (countries.features[i].properties.continent =="Oceania") {
 					ContOC = turf.union(ContOC,countries.features[i]);
-				} else if(countries.features[i].properties.continent =="Antarctica") {
-					ContAN= turf.union(ContAN,countries.features[i]);
 				}
 			}
 			var TestContinent = [ContEU,ContSA,ContNA,ContAF,ContAS,ContOC,ContAN];
-
+			*/
 			d3.select("#Continents")
 				.on("click",function(){
 					layer.clearLayers();
@@ -181,19 +348,48 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 					.on("click",function(){
 						layer.clearLayers();
 						layer.addData(countries);
+						layer.setStyle(style_polygons);
 					});
 			d3.select("#Plates")
 				.on("click",function(){
 					layer.clearLayers();
-					layer.addData(tect)
+					layer.addData(tect);
+					layer.setStyle(style_polygons);
 				});
-			d3.select("#Count_Cont")
+			d3.select("#ClearDelim")
 				.on("click",function(){
 					layer.clearLayers();
-					//layer.addData(TestContinent);
+			});
+			d3.select("#Earthquake")
+				.on("click",function() {
+					layerevents.addData(Data_earthquake);
+					layerevents.setStyle(MarkerEar);
+			});
+			d3.select("#Tsunami")
+				.on("click",function() {
+					console.log(Data_tsunami);
+					for (let i=0;i<Data_tsunami.features.length;i++) {
+						 layerevents=L.marker([Data_tsunami.features[i].geometry.coordinates[0],Data_tsunami.features[i].geometry.coordinates[1]], {icon:MarkerTsu}).addTo(mymap);
+					};
+
+					//layerevents.marker(Data_tsunami, {icon:MarkerTsu}).addTo(mymap);
+					//layerevents.addData(Data_tsunami, {icon: MarkerTsu});
+					//layerevents.setStyle(MarkerTsu);
+			});
+			d3.select("#Volcano")
+				.on("click",function() {
+					layerevents.addData(Data_volcano);
+					layerevents.setStyle(MarkerVol);
+			});
+			d3.select("#ClearEvents")
+				.on("click",function() {
+					layerevents.clearLayers();
 				});
 			});
 		});
+	});
+	});
+	});
 	});
 
 </script>
