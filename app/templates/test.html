@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Import des resssources css -->
+    <link rel="stylesheet" href="css/leaflet.awesome-markers.css"></link>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet'></link>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+    <link rel="stylesheet" href="http://code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css">
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" rel="stylesheet">
+    <!-- Import des ressources script-->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+    <script src='https://d3js.org/d3.v3.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script src="js/leaflet.awesome-markers.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <title>TESTOOO</title>
+</head>
+<body>
+    <!-- Formulaire pour choix des séparations (Pays/Plaques/Continents) -->
+    <div id="choice_sep">
+        <label for="select_sep">Continents :</label>
+        <select name="select_sep" id="select_sep">
+            <option value="C">Continents</option>
+            <option value="P">Pays</option>
+            <option value="T">Plaques tectoniques</option>
+        </select><br><br>
+
+        <button id="sep_btn">Validation</button>
+    </div>
+    <!-- Formulaire pour choix des events-->
+    <div id="choice_events">
+        <label for="eq_event">Tremblement de terre :</label>
+        <input type="checkbox" name="eq_event" id="eq_event"><br>
+        
+        <label for="tsu_event">Tsunami :</label>
+        <input type="checkbox" name="tsu_event" id="tsu_event"><br>
+        
+        <label for="vol_event">Éruption : </label>
+        <input type="checkbox" name="vol_event" id="vol_event"><br><br>
+        
+        <button id="event_btn">Validation</button>
+    </div>
+</body>
+</html>
+
+<!-- Script JS pour réagir en fonction des boutons cochés -->
+<script type="text/javascript">
+    // Fonction exécutée qd page complètement chargée
+    $(document).ready(function(){
+        // Quoi faire quand le bouton #event_btn est cliqué
+        $("#event_btn").click(function(){
+          // Récupération des valeurs dans les différents inputs
+          if($("#eq_event").is(":checked")) var eq = true;
+          else var eq = false;
+          if($("#eq_tsu").is(":checked")) var tsu = true;
+          else var tsu = false;
+          if($("#eq_event").is(":checked")) var vol = true;
+          else var vol = false;
+          // Choses à faire avec les infos...
+          d3.json("/getTect", function(tect){
+              console.log(tect);
+          })
+        });
+        // Quoi faire quand le bouton #sep_btn est cliqué
+        $("#sep_btn").click(function(){
+            var val = $("#select_sep").val();
+            // Choses à faire avec les infos...
+        });
+    });
+</script>
