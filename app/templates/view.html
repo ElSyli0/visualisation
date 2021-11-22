@@ -378,7 +378,26 @@
                 var txt = "prev_csq_"+id;
                 $(this).attr("id", txt);
             });
-        })
+            // Quoi faire quand le bouton #event_btn est cliqué
+            $("#event_btn").click(function(){
+                // Récupération des valeurs dans les différents inputs
+                if($("#eq_event").is(":checked")) var eq = true;
+                else var eq = false;
+                if($("#eq_tsu").is(":checked")) var tsu = true;
+                else var tsu = false;
+                if($("#eq_event").is(":checked")) var vol = true;
+                else var vol = false;
+                // Choses à faire avec les infos...
+                d3.json("/getTect", function(tect){
+                    console.log(tect);
+                })
+            });
+            // Quoi faire quand le bouton #sep_btn est cliqué
+            $("#sep_btn").click(function(){
+                var val = $("#select_sep").val();
+                // Choses à faire avec les infos...
+            });
+        });
 
     </script>
 
