@@ -74,7 +74,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 <script src="js/leaflet.awesome-markers.js"></script>
 <script type="text/javascript">
-var mymap = L.map('map').setView([0, 0], 3);
+var mymap = L.map('map', { zoomControl: false }).setView([0, 0], 2);
+mymap.doubleClickZoom.disable();
+mymap.scrollWheelZoom.disable();
+mymap.boxZoom.disable();
+mymap.keyboard.disable();
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
@@ -83,6 +87,7 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
     zoomOffset: -1,
     accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
 }).addTo(mymap);
+// intensity : 3 ou plus bas delete
 function getGeoJSON_E(DataJson){
 	let features =Array();
 	for (let i=0;i<DataJson.length;i++){
@@ -105,6 +110,7 @@ function getGeoJSON_E(DataJson){
 	}
 	return features
 }
+// validity 0 et 1 delete
 function getGeoJSON_T(DataJson){
 	let features =Array();
 	for (let i=0;i<DataJson.length;i++){
@@ -227,18 +233,21 @@ var MarkerVol = L.AwesomeMarkers.icon({
 					layer.clearLayers();
 					layer.addData(continents);
 					layer.setStyle(style_polygons);
+					mymap.setView([0, 0], 2);
 				});
 			d3.select("#Countries")
 					.on("click",function(){
 						layer.clearLayers();
 						layer.addData(countries);
 						layer.setStyle(style_polygons);
+						mymap.setView([0, 0], 2);
 					});
 			d3.select("#Plates")
 				.on("click",function(){
 					layer.clearLayers();
 					layer.addData(tect);
 					layer.setStyle(style_polygons);
+					mymap.setView([0, 0], 2);
 				});
 			d3.select("#ClearDelim")
 				.on("click",function(){
