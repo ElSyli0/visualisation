@@ -75,10 +75,12 @@
 <script src="js/leaflet.awesome-markers.js"></script>
 <script type="text/javascript">
 var mymap = L.map('map', { zoomControl: false }).setView([0, 0], 2);
+/*
 mymap.doubleClickZoom.disable();
 mymap.scrollWheelZoom.disable();
 mymap.boxZoom.disable();
 mymap.keyboard.disable();
+*/
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
@@ -87,11 +89,44 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
     zoomOffset: -1,
     accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
 }).addTo(mymap);
-// intensity : 3 ou plus bas delete
+function Countries_clean(Data){
+	let features=Array();
+	for (let i=0;i<Data.features.length;i++){
+		if (Data.features[i].geometry.type=="MultiPolygon"){
+			for (let j=0;j<Data.features[i].geometry.coordinates.length;j++){
+				let point={type:"Feature",
+									geometry :{
+										type: "Polygon",
+										coordinates :Data.features[i].geometry.coordinates[j]
+									},
+									properties : {
+										name : Data.features[i].properties.name
+									}
+				}
+				features.push(point);
+			}
+		} else if(Data.features[i].geometry.type=="Polygon"){
+			let point={type:"Feature",
+								geometry :{
+									type: "Polygon",
+									coordinates :Data.features[i].geometry.coordinates
+								},
+								properties : {
+									name : Data.features[i].properties.name
+								}
+			}
+			features.push(point);
+		} else {
+			console.log(i);
+			console.log(Data.features[i]);
+		}
+	}
+	return features
+}
 function getGeoJSON_E(DataJson){
 	let features =Array();
 	for (let i=0;i<DataJson.length;i++){
-		if (DataJson[i].longitude && DataJson[i].latitude) {
+		if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].intensity >3 && DataJson[i].latitude > -70 && DataJson[i].latitude < 80) {
 			let point={type:"Feature",
 							geometry : {
 								type: "Point",
@@ -110,11 +145,10 @@ function getGeoJSON_E(DataJson){
 	}
 	return features
 }
-// validity 0 et 1 delete
 function getGeoJSON_T(DataJson){
 	let features =Array();
 	for (let i=0;i<DataJson.length;i++){
-		if (DataJson[i].longitude && DataJson[i].latitude) {
+		if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].eventValidity >1&& DataJson[i].latitude > -70 && DataJson[i].latitude < 80) {
 			let point={type:"Feature",
 							geometry : {
 								type: "Point",
@@ -136,7 +170,7 @@ function getGeoJSON_T(DataJson){
 function getGeoJSON_V(DataJson){
 	let features =Array();
 	for (let i=0;i<DataJson.length;i++){
-		if (DataJson[i].longitude && DataJson[i].latitude) {
+		if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].latitude > -70 && DataJson[i].latitude < 80) {
 			let point={type:"Feature",
 							geometry : {
 								type: "Point",
@@ -185,11 +219,11 @@ var MarkerVol = L.AwesomeMarkers.icon({
 	prefix:'fa',
 	iconColor:'white',
 })
-
-
 			let Data_earthquake ={type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
 			let Data_tsunami ={type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
 			let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol)};
+			let Data_countries ={type :"FeatureCollection",features: Countries_clean(countries)};
+
 
 			var style_polygons = {
 				"fillColor" :'white',
@@ -199,7 +233,7 @@ var MarkerVol = L.AwesomeMarkers.icon({
 			};
 
 			//console.log(countries.features.length);
-			function onEachFeature(feature, layer){
+			function onEachFeatureDelim(feature, layer){
 			//continents
 				if (feature.properties && feature.properties.continent) {
 					layer.bindPopup(feature.properties.continent);
@@ -222,9 +256,12 @@ var MarkerVol = L.AwesomeMarkers.icon({
 					});
 			}
 			};
-			var layer=L.geoJSON(countries,{onEachFeature: onEachFeature}).addTo(mymap);
+			function onEachFeatureEvent (feature, layer) {
+				layer.bindPopup(feature.geometry.coordinates.toString());
+			}
+			var layer=L.geoJSON(Data_countries,{onEachFeature: onEachFeatureDelim}).addTo(mymap);
 			layer.setStyle(style_polygons);
-			var layerevents=L.geoJSON().addTo(mymap);
+			var layerevents=L.geoJSON(Data_volcano,{onEachFeature: onEachFeatureEvent}).addTo(mymap);
 			L.marker([0.0,0.0], {icon: MarkerEar}).addTo(mymap);
 			L.marker([0.0,15], {icon: MarkerTsu}).addTo(mymap);
 			L.marker([15,0.0], {icon: MarkerVol}).addTo(mymap);
@@ -238,7 +275,7 @@ var MarkerVol = L.AwesomeMarkers.icon({
 			d3.select("#Countries")
 					.on("click",function(){
 						layer.clearLayers();
-						layer.addData(countries);
+						layer.addData(Data_countries);
 						layer.setStyle(style_polygons);
 						mymap.setView([0, 0], 2);
 					});
@@ -260,11 +297,15 @@ var MarkerVol = L.AwesomeMarkers.icon({
 			});
 			d3.select("#Tsunami")
 				.on("click",function() {
+					/*
 					console.log(Data_tsunami);
 					for (let i=0;i<Data_tsunami.features.length;i++) {
 						 layerevents=L.marker([Data_tsunami.features[i].geometry.coordinates[0],Data_tsunami.features[i].geometry.coordinates[1]], {icon:MarkerTsu}).addTo(mymap);
-					};
 
+					};
+					*/
+					layerevents.addData(Data_tsunami);
+					layerevents.setStyle(MarkerTsu);
 					//layerevents.marker(Data_tsunami, {icon:MarkerTsu}).addTo(mymap);
 					//layerevents.addData(Data_tsunami, {icon: MarkerTsu});
 					//layerevents.setStyle(MarkerTsu);
