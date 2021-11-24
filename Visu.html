@@ -74,7 +74,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 <script src="js/leaflet.awesome-markers.js"></script>
 <script type="text/javascript">
-var mymap = L.map('map', { zoomControl: false }).setView([0, 0], 2);
+var mymap = L.map('map', { zoomControl: false }).setView([27, 0], 2);
 /*
 mymap.doubleClickZoom.disable();
 mymap.scrollWheelZoom.disable();
@@ -89,10 +89,10 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
     zoomOffset: -1,
     accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
 }).addTo(mymap);
-function Countries_clean(Data){
+function Polygon_clean(Data){
 	let features=Array();
 	for (let i=0;i<Data.features.length;i++){
-		if (Data.features[i].geometry.type=="MultiPolygon"){
+		if (Data.features[i].geometry.type=="MultiPolygon" && Data.features[i].properties.name){
 			for (let j=0;j<Data.features[i].geometry.coordinates.length;j++){
 				let point={type:"Feature",
 									geometry :{
@@ -100,12 +100,12 @@ function Countries_clean(Data){
 										coordinates :Data.features[i].geometry.coordinates[j]
 									},
 									properties : {
-										name : Data.features[i].properties.name
+											name : Data.features[i].properties.name
 									}
 				}
 				features.push(point);
 			}
-		} else if(Data.features[i].geometry.type=="Polygon"){
+		} else if(Data.features[i].geometry.type=="Polygon" && Data.features[i].properties.name){
 			let point={type:"Feature",
 								geometry :{
 									type: "Polygon",
@@ -116,6 +116,30 @@ function Countries_clean(Data){
 								}
 			}
 			features.push(point);
+		} else if (Data.features[i].geometry.type=="Polygon" && Data.features[i].properties.continent){
+			let point={type:"Feature",
+								geometry :{
+									type: "Polygon",
+									coordinates :Data.features[i].geometry.coordinates
+								},
+								properties : {
+									name : Data.features[i].properties.continent
+								}
+			}
+			features.push(point);
+		} else if (Data.features[i].geometry.type=="MultiPolygon" && Data.features[i].properties.continent){
+			for (let j=0;j<Data.features[i].geometry.coordinates.length;j++){
+				let point={type:"Feature",
+									geometry :{
+										type: "Polygon",
+										coordinates :Data.features[i].geometry.coordinates[j]
+									},
+									properties : {
+											name : Data.features[i].properties.name
+									}
+				}
+				features.push(point);
+			}
 		} else {
 			console.log(i);
 			console.log(Data.features[i]);
@@ -222,7 +246,8 @@ var MarkerVol = L.AwesomeMarkers.icon({
 			let Data_earthquake ={type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
 			let Data_tsunami ={type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
 			let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol)};
-			let Data_countries ={type :"FeatureCollection",features: Countries_clean(countries)};
+			let Data_countries ={type :"FeatureCollection",features: Polygon_clean(countries)};
+			let Data_continents ={type :"FeatureCollection",features: Polygon_clean(continents)};
 
 
 			var style_polygons = {
@@ -235,12 +260,14 @@ var MarkerVol = L.AwesomeMarkers.icon({
 			//console.log(countries.features.length);
 			function onEachFeatureDelim(feature, layer){
 			//continents
+			/*
 				if (feature.properties && feature.properties.continent) {
 					layer.bindPopup(feature.properties.continent);
 					layer.on("click", function(event){
 						mymap.fitBounds(event.target.getBounds());
 					});
 				}
+				*/
 				//Plates
 				if (feature.properties && feature.properties.PlateName) {
 					layer.bindPopup(feature.properties.PlateName);
@@ -268,23 +295,23 @@ var MarkerVol = L.AwesomeMarkers.icon({
 			d3.select("#Continents")
 				.on("click",function(){
 					layer.clearLayers();
-					layer.addData(continents);
+					layer.addData(Data_continents);
 					layer.setStyle(style_polygons);
-					mymap.setView([0, 0], 2);
+					mymap.setView([27, 0], 2);
 				});
 			d3.select("#Countries")
 					.on("click",function(){
 						layer.clearLayers();
 						layer.addData(Data_countries);
 						layer.setStyle(style_polygons);
-						mymap.setView([0, 0], 2);
+						mymap.setView([27, 0], 2);
 					});
 			d3.select("#Plates")
 				.on("click",function(){
 					layer.clearLayers();
 					layer.addData(tect);
 					layer.setStyle(style_polygons);
-					mymap.setView([0, 0], 2);
+					mymap.setView([27, 0], 2);
 				});
 			d3.select("#ClearDelim")
 				.on("click",function(){
