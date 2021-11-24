@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Import des resssources css -->
-    <link rel="stylesheet" href="css/leaflet.awesome-markers.css"></link>
+    <link rel="stylesheet" href="/static/css/leaflet.awesome-markers.css"></link>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet'></link>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
     integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
@@ -18,7 +18,7 @@
    crossorigin=""></script>
     <script src='https://d3js.org/d3.v3.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-    <script src="js/leaflet.awesome-markers.js"></script>
+    <script src="/static/js/leaflet.awesome-markers.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <title>TESTOOO</title>
 </head>
@@ -47,6 +47,13 @@
         
         <button id="event_btn">Validation</button>
     </div>
+
+
+    <div id="graph_box">
+        <svg id="graph"></svg>
+    </div>
+
+
 </body>
 </html>
 
@@ -74,4 +81,9 @@
             // Choses à faire avec les infos...
         });
     });
+</script>
+
+<!-- Script JS pour graphiques -->
+<script type="text/javascript">
+    
 </script>

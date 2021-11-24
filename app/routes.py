@@ -17,8 +17,8 @@ from sqlalchemy import exc
 @app.route("/")
 def home():
     form = EventsFiltreForm()
-    return render_template("test.html", form=form)
-    #return render_template("view.html")
+    #return render_template("test.html", form=form)
+    return render_template("view.html")
 
 @app.route("/getVolcanoEvents")
 def getVolcanoEvents():
@@ -28,9 +28,17 @@ def getVolcanoEvents():
     doc.close()
     return json.dumps(res)
 
+@app.route("/getVolcanoLoc")
+def getVolcanoLoc():
+    path = os.path.join("app", "static", "data", "volcano_locations.json")
+    doc = open(path, )
+    res = json.load(doc)
+    doc.close()
+    return json.dumps(res)
+
 @app.route("/getContinents")
 def getContinents():
-    path = os.path.join("app", "static", "data", "continents.json")
+    path = os.path.join("app", "static", "data", "continents_clean.json")
     doc = open(path, )
     res = json.load(doc)
     doc.close()
@@ -55,6 +63,14 @@ def getTect():
 @app.route("/getEarthquake")
 def getEarthquake():
     path = os.path.join("app", "static", "data", "earthquakes_events.json")
+    doc = open(path, )
+    res = json.load(doc)
+    doc.close()
+    return json.dumps(res)
+
+@app.route("/getTsu")
+def getTsu():
+    path = os.path.join("app", "static", "data", "tsunamis_events.json")
     doc = open(path, )
     res = json.load(doc)
     doc.close()
