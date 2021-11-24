@@ -594,62 +594,19 @@
         }
         return features
     }
-    function getMarker(Data, Marker,L) {
-      let features =Array();
-      var Marker_tmp = L.marker([Data.features[0].geometry.coordinates[1],Data.features[0].geometry.coordinates[0]],{icon: Marker});
-      features.push(Marker_tmp);
-      for (let i=1;i<Data.features.length;i++) {
-        Marker_tmp = L.marker([Data.features[i].geometry.coordinates[1],Data.features[i].geometry.coordinates[0]],{icon: Marker});
-        features.push(Marker_tmp);
-      }
-      return features;
-    }
         d3.json("/getContinents", function(continents){   // The code in the function is executed only when the data is loaded. All code requiring that the data is fully loaded shoud come here
         d3.json("/getCountries",function(countries){
         d3.json("/getTect",function(tect){
         d3.json("/getEarthquake",function(Da_ear){
         d3.json("/getTsu",function(Da_tsu){
         d3.json("/getVolcanoLoc",function(Da_vol){
-            /*
-                console.log(continents);
-                console.log(countries);
-                console.log(tect);
-                console.log(Da_ear);
-                console.log(Da_tsu);
-                console.log(Da_vol);
-            */
-
-            // Creates a red marker with the coffee icon
-
-    var MarkerTsu = L.AwesomeMarkers.icon({
-        icon: 'tint',
-        markerColor: 'darkblue',
-        prefix:'fa',
-        iconColor:'white',
-    });
-    var MarkerEar = L.AwesomeMarkers.icon({
-        icon:'globe',
-        markerColor: 'beige',
-        prefix:'fa',
-        iconColor:'black',
-    });
-    var MarkerVol = L.AwesomeMarkers.icon({
-        icon:'fire',
-        markerColor: 'darkred',
-        prefix:'fa',
-        iconColor:'white',
-    })
 
                 let Data_earthquake ={type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
                 let Data_tsunami ={type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
                 let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol)};
                 let Data_countries ={type :"FeatureCollection",features: Polygon_clean(countries)};
                 let Data_continents ={type :"FeatureCollection",features: Polygon_clean(continents)};
-                console.log(Data_tsunami.features[1].geometry.coordinates[1])
-                let Marker_tsunami =getMarker(Data_tsunami,MarkerTsu,L);
-                let Marker_earthquake = getMarker(Data_earthquake,MarkerEar,L);
-                let Marker_volcano = getMarker(Data_volcano,MarkerVol,L);
-
+                //console.log(Data_tsunami.features[1].geometry.coordinates[1])
                 var style_polygons = {
                     "fillColor" :'white',
                     "color" : "#f55919",
@@ -688,8 +645,43 @@
                 }
                 var layer=L.geoJSON(Data_countries,{onEachFeature: onEachFeatureDelim}).addTo(mymap);
                 layer.setStyle(style_polygons);
-                var layerevents=L.geoJSON(Data_tsunami.features[0],{onEachFeature: onEachFeatureEvent}).addTo(mymap);
-                layerevents.clearLayers();
+                var layerTsunami=L.geoJSON(false,
+                  {pointToLayer: function(feature, latlng){
+                    var MarkerTsu = L.AwesomeMarkers.icon({
+                        icon: 'tint',
+                        markerColor: 'darkblue',
+                        prefix:'fa',
+                        iconColor:'white',
+                    });
+                    return L.marker(latlng,{icon: MarkerTsu});
+                  },
+                  onEachFeature: onEachFeatureEvent
+                }).addTo(mymap);
+                var layerVolcano=L.geoJSON(false,
+                  {pointToLayer: function(feature, latlng){
+                    var MarkerVol = L.AwesomeMarkers.icon({
+                        icon:'fire',
+                        markerColor: 'darkred',
+                        prefix:'fa',
+                        iconColor:'white',
+                    });
+                    return L.marker(latlng,{icon: MarkerVol});
+                  },
+                  onEachFeature: onEachFeatureEvent
+                }).addTo(mymap);
+                var layerEarthquake=L.geoJSON(false,
+                  {pointToLayer: function(feature, latlng){
+                    var MarkerEar = L.AwesomeMarkers.icon({
+                        icon:'globe',
+                        markerColor: 'beige',
+                        prefix:'fa',
+                        iconColor:'black',
+                    });
+                    return L.marker(latlng,{icon: MarkerEar});
+                  },
+                  onEachFeature: onEachFeatureEvent
+                }).addTo(mymap);
+
                 // Choix des séparations
                 $("#sep_btn").click(function(){
                     var val = $("#select_sep").val();
@@ -717,7 +709,11 @@
                 });
                 //
                 $("#event_btn").click(function(){
-                    layerevents.clearLayers();
+
+                    layerTsunami.clearLayers();
+                    layerEarthquake.clearLayers();
+                    layerVolcano.clearLayers();
+
                     // Récupération des valeurs dans les différents inputs
                     if($("#eq_event").is(":checked")) var eq = true;
                     else var eq = false;
@@ -727,57 +723,50 @@
                     else var vol = false;
                     // Choses à faire avec les infos...
                     if(eq){
-                      for (let i=0;i<Marker_earthquake.length;i++) {
-                        Marker_earthquake[i].addTo(layerevents);
-                      }
-                        //layerevents.addData(Data_earthquake);
+                        layerEarthquake.addData(Data_earthquake);
                     }
                     if(tsu){
-                      for (let i=0;i<Marker_tsunami.length;i++) {
-                        Marker_tsunami[i].addTo(layerevents);
-                      }
-                        //layerevents.addData(Data_tsunami);
+                        layerTsunami.addData(Data_tsunami);
                     }
                     if(vol){
-                      for (let i=0;i<Marker_volcano.length;i++) {
-                        Marker_volcano[i].addTo(layerevents);
-                      }
-                        //layerevents.addData(Data_volcano);
+                        layerVolcano.addData(Data_volcano);
                     }
                 });
                 /*
                 d3.select("#Earthquake")
                     .on("click",function() {
-                        layerevents.addData(Data_earthquake);
-                        layerevents.setStyle(MarkerEar);
+                        layerTsunami.addData(Data_earthquake);
+                        layerTsunami.setStyle(MarkerEar);
                 });
                 d3.select("#Tsunami")
                     .on("click",function() {
                         /*
                         console.log(Data_tsunami);
                         for (let i=0;i<Data_tsunami.features.length;i++) {
-                             layerevents=L.marker([Data_tsunami.features[i].geometry.coordinates[0],Data_tsunami.features[i].geometry.coordinates[1]], {icon:MarkerTsu}).addTo(mymap);
+                             layerTsunami=L.marker([Data_tsunami.features[i].geometry.coordinates[0],Data_tsunami.features[i].geometry.coordinates[1]], {icon:MarkerTsu}).addTo(mymap);
 
                         };
                         */
                        /*
-                        layerevents.addData(Data_tsunami);
-                        layerevents.setStyle(MarkerTsu);
+                        layerTsunami.addData(Data_tsunami);
+                        layerTsunami.setStyle(MarkerTsu);
                         */
-                        //layerevents.marker(Data_tsunami, {icon:MarkerTsu}).addTo(mymap);
-                        //layerevents.addData(Data_tsunami, {icon: MarkerTsu});
-                        //layerevents.setStyle(MarkerTsu);
+                        //layerTsunami.marker(Data_tsunami, {icon:MarkerTsu}).addTo(mymap);
+                        //layerTsunami.addData(Data_tsunami, {icon: MarkerTsu});
+                        //layerTsunami.setStyle(MarkerTsu);
                 /*
                 });
                 d3.select("#Volcano")
                     .on("click",function() {
-                        layerevents.addData(Data_volcano);
-                        layerevents.setStyle(MarkerVol);
+                        layerTsunami.addData(Data_volcano);
+                        layerTsunami.setStyle(MarkerVol);
                 });
                 */
                 d3.select("#ClearEvents")
                     .on("click",function() {
-                        layerevents.clearLayers();
+                      layerTsunami.clearLayers();
+                      layerEarthquake.clearLayers();
+                      layerVolcano.clearLayers();
                     });
                 });
             });
