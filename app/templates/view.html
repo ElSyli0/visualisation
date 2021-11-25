@@ -23,7 +23,6 @@
     <link rel "stylesheet" href="/static/dist/MarkerCluster.css"><</link>
     <link rel "stylesheet" href="/static/dist/MarkerCluster.Default.css"></link>
     <script src="static/dist/leaflet.markercluster-src.js"></script>
-
     <!-- Code CSS personnalisé -->
     <style type="text/css">
         /* BAR CHART */
@@ -405,14 +404,16 @@
                 // Choses à faire avec les infos...
             });
         });
-
     </script>
 
     <h1>Où (ne pas) aller dans le monde ?</h1>
 
     <!-- div pour affichage de la carte-->
     <div id="map"></div>
-
+    <h3>Limite inf date</h3>
+    <input type="number" id="DateInf" value="2">
+    <input type="number" id="DateSup" value="10">
+    <button id="Date_ok" onclick="RecupDate()">Date ok</button>
     <!-- div pour choix des séparations (Pays/Plaques/Continents) -->
     <div id="choice_sep">
         <h2>Choix des délimitations</h2>
@@ -462,15 +463,24 @@
     </div>
 </body>
 </html>
-
+<script>
+function RecupDate() {
+  var res = Array();
+  var x = document.getElementById("DateInf").value;
+  res.push(x);
+  x = document.getElementById("DateSup").value;
+  res.push(x);
+  return res
+}
+</script>
 <script type="text/javascript">
-    var mymap = L.map('map', { zoomControl: false }).setView([27, 0], 2);
-    /*
+    let AutoZoom =2;
+    let AutoCenter =[30,0];
+    var mymap = L.map('map', { zoomControl: false }).setView(AutoCenter, AutoZoom);
     mymap.doubleClickZoom.disable();
     mymap.scrollWheelZoom.disable();
     mymap.boxZoom.disable();
     mymap.keyboard.disable();
-    */
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         maxZoom: 18,
@@ -479,10 +489,26 @@
         zoomOffset: -1,
         accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
     }).addTo(mymap);
-    function Polygon_clean(Data){
+    let LimiteDate=RecupDate();
+    $("#Date_ok").click(function(){
+      LimiteDate=RecupDate();
+      if (LimiteDate[0]>LimiteDate[1]){
+        let tmp =LimiteDate[0];
+        LimiteDate[0]=LimiteDate[1];
+        LimiteDate[1]=tmp;
+      }
+      if (LimiteDate[0].length ==0 || LimiteDate[1].length ==0){
+        LimiteDate[0]=0;
+        LimiteDate[1]=2021;
+      }
+      if (LimiteDate[0]==LimiteDate[1]) {
+        LimiteDate[0]=LimiteDate[0]-10;
+      }
+    })
+    function Polygon_cleanCountries(Data){
         let features=Array();
         for (let i=0;i<Data.features.length;i++){
-            if (Data.features[i].geometry.type=="MultiPolygon" && Data.features[i].properties.name){
+            if (Data.features[i].geometry.type=="MultiPolygon"){
                 for (let j=0;j<Data.features[i].geometry.coordinates.length;j++){
                     let point={type:"Feature",
                                         geometry :{
@@ -495,7 +521,7 @@
                     }
                     features.push(point);
                 }
-            } else if(Data.features[i].geometry.type=="Polygon" && Data.features[i].properties.name){
+            } else if(Data.features[i].geometry.type=="Polygon"){
                 let point={type:"Feature",
                                     geometry :{
                                         type: "Polygon",
@@ -506,7 +532,30 @@
                                     }
                 }
                 features.push(point);
-            } else if (Data.features[i].geometry.type=="Polygon" && Data.features[i].properties.continent){
+            } else {
+                console.log(i);
+                console.log(Data.features[i]);
+            }
+        }
+        return features
+    }
+    function Polygon_cleanContinent(Data){
+        let features=Array();
+        for (let i=0;i<Data.features.length;i++){
+            if (Data.features[i].geometry.type=="MultiPolygon"){
+                for (let j=0;j<Data.features[i].geometry.coordinates.length;j++){
+                    let point={type:"Feature",
+                                        geometry :{
+                                            type: "Polygon",
+                                            coordinates :Data.features[i].geometry.coordinates[j]
+                                        },
+                                        properties : {
+                                                name : Data.features[i].properties.continent
+                                        }
+                    }
+                    features.push(point);
+                }
+            } else if(Data.features[i].geometry.type=="Polygon"){
                 let point={type:"Feature",
                                     geometry :{
                                         type: "Polygon",
@@ -517,7 +566,17 @@
                                     }
                 }
                 features.push(point);
-            } else if (Data.features[i].geometry.type=="MultiPolygon" && Data.features[i].properties.continent){
+            } else {
+                console.log(i);
+                console.log(Data.features[i]);
+            }
+        }
+        return features
+    }
+    function Polygon_cleanTect(Data){
+        let features=Array();
+        for (let i=0;i<Data.features.length;i++){
+            if (Data.features[i].geometry.type=="MultiPolygon"){
                 for (let j=0;j<Data.features[i].geometry.coordinates.length;j++){
                     let point={type:"Feature",
                                         geometry :{
@@ -525,11 +584,22 @@
                                             coordinates :Data.features[i].geometry.coordinates[j]
                                         },
                                         properties : {
-                                                name : Data.features[i].properties.name
+                                                name : Data.features[i].properties.PlateName
                                         }
                     }
                     features.push(point);
                 }
+            } else if(Data.features[i].geometry.type=="Polygon"){
+                let point={type:"Feature",
+                                    geometry :{
+                                        type: "Polygon",
+                                        coordinates :Data.features[i].geometry.coordinates
+                                    },
+                                    properties : {
+                                        name : Data.features[i].properties.PlateName
+                                    }
+                }
+                features.push(point);
             } else {
                 console.log(i);
                 console.log(Data.features[i]);
@@ -604,16 +674,26 @@
                 let Data_earthquake ={type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
                 let Data_tsunami ={type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
                 let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol)};
-                let Data_countries ={type :"FeatureCollection",features: Polygon_clean(countries)};
-                let Data_continents ={type :"FeatureCollection",features: Polygon_clean(continents)};
+                let Data_countries ={type :"FeatureCollection",features: Polygon_cleanCountries(countries)};
+                let Data_continents ={type :"FeatureCollection",features: Polygon_cleanContinent(continents)};
+                let Data_tect ={type :"FeatureCollection",features: Polygon_cleanTect(tect)};
                 //console.log(Data_tsunami.features[1].geometry.coordinates[1])
+                console.log(tect.features.length);
                 var style_polygons = {
                     "fillColor" :'white',
                     "color" : "#f55919",
                     "opacity" : 0.7,
                     "dashArray": '20,10'
                 };
+                function onMapClick(e) {
+                  console.log(mymap.getZoom());
+                  console.log(mymap.getCenter());
+                  console.log(mymap.getZoom()==AutoZoom);
+                  console.log(mymap.getCenter().lat==AutoCenter[0]);
+                  console.log(mymap.getCenter().lng==AutoCenter[1]);
+                }
 
+                mymap.on('click', onMapClick);
                 //console.log(countries.features.length);
                 function onEachFeatureDelim(feature, layer){
                 //continents
@@ -626,12 +706,14 @@
                     }
                     */
                     //Plates
+                    /*
                     if (feature.properties && feature.properties.PlateName) {
                         layer.bindPopup(feature.properties.PlateName);
                         layer.on("click", function(event){
                             mymap.fitBounds(event.target.getBounds());
                         });
                     }
+                    */
                     //countries
                     if (feature.properties && feature.properties.name) {
                         layer.bindPopup(feature.properties.name);
@@ -686,21 +768,30 @@
                 $("#sep_btn").click(function(){
                     var val = $("#select_sep").val();
                     if(val == "P"){
-                        layer.clearLayers();
-                        layer.addData(Data_countries);
-                        layer.setStyle(style_polygons);
-                        mymap.setView([27, 0], 2);
+                      layerTsunami.clearLayers();
+                      layerEarthquake.clearLayers();
+                      layerVolcano.clearLayers();
+                      layer.clearLayers();
+                      layer.addData(Data_countries);
+                      layer.setStyle(style_polygons);
+                      mymap.setView(AutoCenter, AutoZoom);
                     }else if(val == "C"){
-                        layer.clearLayers();
-                        layer.addData(Data_continents);
-                        layer.setStyle(style_polygons);
-                        mymap.setView([27, 0], 2);
+                      layerTsunami.clearLayers();
+                      layerEarthquake.clearLayers();
+                      layerVolcano.clearLayers();
+                      layer.clearLayers();
+                      layer.addData(Data_continents);
+                      layer.setStyle(style_polygons);
+                      mymap.setView(AutoCenter, AutoZoom);
                     }
                     else if(val == "T"){
-                        layer.clearLayers();
-                        layer.addData(tect);
-                        layer.setStyle(style_polygons);
-                        mymap.setView([27, 0], 2);
+                      layerTsunami.clearLayers();
+                      layerEarthquake.clearLayers();
+                      layerVolcano.clearLayers();
+                      layer.clearLayers();
+                      layer.addData(Data_tect);
+                      layer.setStyle(style_polygons);
+                      mymap.setView(AutoCenter, AutoZoom);
                     }
                 });
                 d3.select("#ClearDelim")
@@ -722,14 +813,16 @@
                     if($("#vol_event").is(":checked")) var vol = true;
                     else var vol = false;
                     // Choses à faire avec les infos...
-                    if(eq){
-                        layerEarthquake.addData(Data_earthquake);
-                    }
-                    if(tsu){
-                        layerTsunami.addData(Data_tsunami);
-                    }
-                    if(vol){
-                        layerVolcano.addData(Data_volcano);
+                    if(mymap.getZoom()!=AutoZoom && mymap.getCenter().lat!=AutoCenter[0] && mymap.getCenter().lng!=AutoCenter[1]){
+                      if(eq){
+                          layerEarthquake.addData(Data_earthquake);
+                      }
+                      if(tsu){
+                          layerTsunami.addData(Data_tsunami);
+                      }
+                      if(vol){
+                          layerVolcano.addData(Data_volcano);
+                      }
                     }
                 });
                 /*
