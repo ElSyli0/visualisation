@@ -411,8 +411,8 @@
     <!-- div pour affichage de la carte-->
     <div id="map"></div>
     <h3>Limite inf date</h3>
-    <input type="number" id="DateInf" value="2">
-    <input type="number" id="DateSup" value="10">
+    <input type="number" id="DateInf" value="-500">
+    <input type="number" id="DateSup" value="2022">
     <button id="Date_ok" onclick="RecupDate()">Date ok</button>
     <!-- div pour choix des séparations (Pays/Plaques/Continents) -->
     <div id="choice_sep">
@@ -489,22 +489,6 @@ function RecupDate() {
         zoomOffset: -1,
         accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
     }).addTo(mymap);
-    let LimiteDate=RecupDate();
-    $("#Date_ok").click(function(){
-      LimiteDate=RecupDate();
-      if (LimiteDate[0]>LimiteDate[1]){
-        let tmp =LimiteDate[0];
-        LimiteDate[0]=LimiteDate[1];
-        LimiteDate[1]=tmp;
-      }
-      if (LimiteDate[0].length ==0 || LimiteDate[1].length ==0){
-        LimiteDate[0]=0;
-        LimiteDate[1]=2021;
-      }
-      if (LimiteDate[0]==LimiteDate[1]) {
-        LimiteDate[0]=LimiteDate[0]-10;
-      }
-    })
     function Polygon_cleanCountries(Data){
         let features=Array();
         for (let i=0;i<Data.features.length;i++){
@@ -621,6 +605,16 @@ function RecupDate() {
                                     intensity : DataJson[i].intensity,
                                 }
                 }
+                if (DataJson[i].comments) {
+                  point.properties.comments = DataJson[i].comments
+                } else {
+                  point.properties.comments ="Nothing to say, glhf"
+                }
+                if (DataJson[i].year){
+                  point.properties.year=DataJson[i].year
+                } else {
+                  point.properties.year=0
+                }
                 features.push(point);
             }
         }
@@ -639,6 +633,16 @@ function RecupDate() {
                                     id : DataJson[i].id,
                                     intensity : DataJson[i].intensity,
                                 }
+                }
+                if (DataJson[i].comments) {
+                  point.properties.comments = DataJson[i].comments
+                } else {
+                  point.properties.comments ="Nothing to say, glhf"
+                }
+                if (DataJson[i].year){
+                  point.properties.year=DataJson[i].year
+                } else {
+                  point.properties.year=0
                 }
                 features.push(point);
             }
@@ -659,10 +663,20 @@ function RecupDate() {
                                     intensity : DataJson[i].intensity,
                                 }
                 }
+
                 features.push(point);
             }
         }
         return features
+    }
+    function DataTimed(Data,Time){
+      let features=Array();
+      for (let i=0;i<Data.features.length;i++){
+        if (Data.features[i].properties.year > Time[0] && Data.features[i].properties.year < Time[1]){
+          features.push(Data.features[i]);
+        }
+      }
+      return features;
     }
         d3.json("/getContinents", function(continents){   // The code in the function is executed only when the data is loaded. All code requiring that the data is fully loaded shoud come here
         d3.json("/getCountries",function(countries){
@@ -671,50 +685,43 @@ function RecupDate() {
         d3.json("/getTsu",function(Da_tsu){
         d3.json("/getVolcanoLoc",function(Da_vol){
 
-                let Data_earthquake ={type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
-                let Data_tsunami ={type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
-                let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol)};
-                let Data_countries ={type :"FeatureCollection",features: Polygon_cleanCountries(countries)};
-                let Data_continents ={type :"FeatureCollection",features: Polygon_cleanContinent(continents)};
-                let Data_tect ={type :"FeatureCollection",features: Polygon_cleanTect(tect)};
-                //console.log(Data_tsunami.features[1].geometry.coordinates[1])
-                console.log(tect.features.length);
-                var style_polygons = {
-                    "fillColor" :'white',
-                    "color" : "#f55919",
-                    "opacity" : 0.7,
-                    "dashArray": '20,10'
-                };
-                function onMapClick(e) {
-                  console.log(mymap.getZoom());
-                  console.log(mymap.getCenter());
-                  console.log(mymap.getZoom()==AutoZoom);
-                  console.log(mymap.getCenter().lat==AutoCenter[0]);
-                  console.log(mymap.getCenter().lng==AutoCenter[1]);
-                }
+          let Data_earthquake ={type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
+          let Data_tsunami ={type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
+          let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol)};
+          let Data_countries ={type :"FeatureCollection",features: Polygon_cleanCountries(countries)};
+          let Data_continents ={type :"FeatureCollection",features: Polygon_cleanContinent(continents)};
+          let Data_tect ={type :"FeatureCollection",features: Polygon_cleanTect(tect)};
+          let LimiteDate=RecupDate();
+          var Time_D_earthquake=DataTimed(Data_earthquake,LimiteDate);
+          var Time_D_tsunami=DataTimed(Data_tsunami,LimiteDate);
+          var Time_D_volcano=Array();
+          $("#Date_ok").click(function(){
+            LimiteDate=RecupDate();
+            if (LimiteDate[0]>LimiteDate[1]){
+              let tmp =LimiteDate[0];
+              LimiteDate[0]=LimiteDate[1];
+              LimiteDate[1]=tmp;
+            }
+            if (LimiteDate[0].length ==0 || LimiteDate[1].length ==0){
+              LimiteDate[0]=0;
+              LimiteDate[1]=2021;
+            }
+            if (LimiteDate[0]==LimiteDate[1]) {
+              LimiteDate[0]=LimiteDate[0]-10;
+            }
+            Time_D_earthquake=DataTimed(Data_earthquake,LimiteDate);
+            Time_D_tsunami=DataTimed(Data_tsunami,LimiteDate);
+            //Time_D_volcano=DataTimed(Data_volcano,LimiteDate);
+          })
+          var style_polygons = {
+            "fillColor" :'white',
+            "color" : "#f55919",
+            "opacity" : 0.7,
+            "dashArray": '20,10'
+          };
 
-                mymap.on('click', onMapClick);
                 //console.log(countries.features.length);
                 function onEachFeatureDelim(feature, layer){
-                //continents
-                /*
-                    if (feature.properties && feature.properties.continent) {
-                        layer.bindPopup(feature.properties.continent);
-                        layer.on("click", function(event){
-                            mymap.fitBounds(event.target.getBounds());
-                        });
-                    }
-                    */
-                    //Plates
-                    /*
-                    if (feature.properties && feature.properties.PlateName) {
-                        layer.bindPopup(feature.properties.PlateName);
-                        layer.on("click", function(event){
-                            mymap.fitBounds(event.target.getBounds());
-                        });
-                    }
-                    */
-                    //countries
                     if (feature.properties && feature.properties.name) {
                         layer.bindPopup(feature.properties.name);
                         layer.on("click", function(event){
@@ -723,7 +730,7 @@ function RecupDate() {
                 }
                 };
                 function onEachFeatureEvent (feature, layer) {
-                    layer.bindPopup(feature.geometry.coordinates.toString());
+                    layer.bindPopup(feature.properties.comments);
                 }
                 var layer=L.geoJSON(Data_countries,{onEachFeature: onEachFeatureDelim}).addTo(mymap);
                 layer.setStyle(style_polygons);
@@ -815,10 +822,10 @@ function RecupDate() {
                     // Choses à faire avec les infos...
                     if(mymap.getZoom()!=AutoZoom && mymap.getCenter().lat!=AutoCenter[0] && mymap.getCenter().lng!=AutoCenter[1]){
                       if(eq){
-                          layerEarthquake.addData(Data_earthquake);
+                          layerEarthquake.addData(Time_D_earthquake);
                       }
                       if(tsu){
-                          layerTsunami.addData(Data_tsunami);
+                          layerTsunami.addData(Time_D_tsunami);
                       }
                       if(vol){
                           layerVolcano.addData(Data_volcano);
