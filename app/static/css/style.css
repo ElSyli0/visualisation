@@ -5,20 +5,7 @@
     height: 600px;
 }
 
-/* CSS code for the elements that have the class dot */
-.beautiful_button {
-    background-color: steelblue;   /* The buttons are colored in steelblue */
-    border: none;   /* The buttons have no border */
-    color: white;   /* The text inside the buttons is white */
-    padding: 15px 32px;   /* Defines the space in pixels between the text inside the buttons and their edges */
-    text-align: center;   /* The text inside the buttons is centered */
-    font-size: 16px;   /* Font size of the text inside the buttons */
-}
 
-#buttons_container{
-    width: 1000px;   /* Dimensions of the buttons_container element */
-    text-align: center;   /* Centers the contents of the buttons_container element */
-}
 /* BAR CHART */
 .bar {
     fill: steelblue;   /* Colors the bars of the bar chart in steelblue */

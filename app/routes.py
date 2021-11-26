@@ -17,8 +17,8 @@ from sqlalchemy import exc
 @app.route("/")
 def home():
     form = EventsFiltreForm()
-    #return render_template("test.html", form=form)
-    return render_template("view.html")
+    return render_template("test.html", form=form)
+    #return render_template("view.html")
 
 @app.route("/getVolcanoEvents")
 def getVolcanoEvents():
