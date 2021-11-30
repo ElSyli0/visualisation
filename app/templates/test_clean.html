@@ -31,14 +31,16 @@
         /* Style pour la légende */
         .legend {
             line-height: 18px;
-            color: #555;
+            background-color: white;
+            border-radius: 5px;
+            height:max-content;
         }
         .legend i {
             width: 18px;
             height: 18px;
             float: left;
             margin-right: 8px;
-            opacity: 0.7;
+            opacity: 0.5;
         }
         /* Style pour les bartchart */
         .bar {
@@ -65,12 +67,12 @@
         #choice_sep{
             position: relative;
             right: -385px;
-            top: -123px;
+            top: -100px;
         }
         #choice_events{
             position: relative;
             right: -650px;
-            top: -269px;
+            top: -225px;
         }
         #facts{
             position: relative;
@@ -310,38 +312,38 @@
 
     <!-- div pour le choix des dates -->
     <div id="choice_date">
-        <h3>Choix de l'intervalle de de temps</h3>
+        <h3>Choice for time range (lower/upper bound)</h3>
         <input type="number" id="DateInf" value="-500">
         <input type="number" id="DateSup" value="2022"><br><br>
     </div>
 
     <!-- div pour choix des séparations (Pays/Plaques/Continents) -->
     <div id="choice_sep">
-        <h2>Choix des délimitations</h2>
-        <!--label for="select_sep">délimitations :</label-->
+        <h2>Which delimitations ?</h2>
         <select name="select_sep" id="select_sep">
-            <option value="P">Pays</option>
-            <option value="T">Plaques tectoniques</option>
+            <option value="P">Countries</option>
+            <option value="T">Tectonic plates</option>
             <option value="C">Continents</option>
         </select><br><br>
 
+        <button id="resetZoom">global view</button>
         <button id="ClearDelim">Clear</button>
     </div>
 
     <!-- div pour choix des events-->
     <div id="choice_events">
-        <h2>Choix des événements</h2>
-        <label for="eq_event">Tremblement de terre :</label>
+        <h2>Which disaster ?</h2>
+        <label for="eq_event">Earthquakes :</label>
         <input type="checkbox" name="eq_event" id="eq_event"><br>
 
-        <label for="tsu_event">Tsunami :</label>
+        <label for="tsu_event">Tsunamis :</label>
         <input type="checkbox" name="tsu_event" id="tsu_event"><br>
 
-        <label for="vol_event">Éruption : </label>
+        <label for="vol_event">Volcanos : </label>
         <input type="checkbox" name="vol_event" id="vol_event"><br><br>
 
-        <button id="event_btn">Validation</button><br>
-        <button id="ClearEvents">Clear_events</button>
+        <button id="event_btn">Validation</button>
+        <button id="ClearEvents">Clear</button>
     </div>
 
     <!-- div pour affichage des graphiques sur les faits -->
@@ -407,29 +409,20 @@
         return turf.booleanPointInPolygon(pt, poly);
     }
     
-    function getMyColor(d) {
-        return  d > 20  ?   "#a50f15" :
-                d > 10  ?   "#de2d26" :
-                d > 5   ?   "#fb6a4a" :
-                d > 0.1 ?   "#fcae91" :
-                            "#fee5d9";
-    /*
-    return d > 1000 ? '#800026' :
-           d > 500  ? '#BD0026' :
-           d > 200  ? '#E31A1C' :
-           d > 100  ? '#FC4E2A' :
-           d > 50   ? '#FD8D3C' :
-           d > 20   ? '#FEB24C' :
-           d > 10   ? '#FED976' :
-                      '#FFEDA0';*/
+    function getMyColor(d, bounds) {
+        if(d >= bounds.b0 && d < bounds.b1) return "#ffffcc";
+        if(d >= bounds.b1 && d < bounds.b2) return "#a1dab4";
+        if(d >= bounds.b2 && d < bounds.b3) return "#41b6c4";
+        if(d >= bounds.b3 && d < bounds.b4) return "#225ea8";
     }
 
-    function newStyle(feature){
+    function newStyle(feature, bounds){
         return {
-            "fillColor" : getMyColor(feature.properties.density),
-            "color" : "#f55919",
-            "opacity" : 1,
-            "dashArray": '20,10'
+            "fillColor" : getMyColor(feature.properties.nbr, bounds),
+            "wheight": 2,
+            "opacity": 1,
+            "dashArray": "3",
+            "fillOpacity": 0.5
         };
     }
     
@@ -617,30 +610,21 @@
         }
         return features;
     }
+    
     // Fonction pour compléter un GEJSON de séparations avec une properties en plus qui est la densité
     // d'accidents
     function addDensityToGEOJSON(Data, all_events){
         var count_total = all_events.length;
         var features = Array();
-        var check = 0;
-        var check_rate = 0;
-        var max = 0;
-        var min = Infinity;
-        var max_rate = 0; // pourcentage
-        var min_rate = 200;
+        var val_array = Array();
         for(let i = 0; i < Data.features.length; i++){
             // Calcul du taux d'incidents pour la feature i
             var count = 0
             for(let j=0; j<all_events.length; j++){
                 if(isInFeature(all_events[j], Data.features[i])) count ++;
             }
-            check = check + count;
+            val_array.push(count);
             var rate = (count/count_total) * 100;
-            check_rate = check_rate + rate;
-            if(count > max) max = count;
-            if(count < min) min = count;
-            if(rate > max_rate) max_rate = rate;
-            if(rate < min_rate) min_rate = rate;
             // Création d'un nouvel élément pour features
             let point = {type:"Feature",
                             geometry :{
@@ -655,17 +639,7 @@
             }
             features.push(point);
         }
-        console.log(all_events.length);
-        console.log(check);
-        console.log(min);
-        console.log(max);
-        console.log(check/Data.features.length);
-        console.log("rate test");
-        console.log(check_rate);
-        console.log(min_rate);
-        console.log(max_rate);
-        console.log(check_rate/Data.features.length)
-        return features;
+        return [val_array, features];
     }
     
     // Récupération de tous les évévenements dans un seul array
@@ -782,26 +756,22 @@
         
         // Initialisation de la légende pour la carte couleur
         let legend = L.control({position: 'bottomright'});
-        legend.onAdd = function (mymap) {
+        legend.onAdd = function (mymap, bounds) {
             // Vérification si élément déjà existant
             var container = legend.getContainer();
-            console.log(container);
             if(container){
                 L.DomUtil.remove(container);
             }
-            var div = L.DomUtil.create('div', 'legend');
-            var grades = [0, 10, 20, 50, 100, 200, 500, 1000];
-            var labels = [];
-            // loop through our density intervals and generate a label with a colored square for each interval
-            for (var i = 0; i < grades.length; i++) {
-                div.innerHTML += '<i style="background:' + getMyColor(grades[i] + 1) + '"></i> ' + grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-            }
-            return div;
+            this._div = L.DomUtil.create('div', 'legend');
+            return this._div;
         };
-        /*legend.onRemove = function(mymap) {
-            var container = legend.getContainer();
-            console.log(container);
-        };*/
+        legend.update = function(bounds){
+            var grades = [bounds.b0, bounds.b1, bounds.b2, bounds.b3, bounds.b4];
+            var labels = [];
+            for (var i = 0; i < grades.length-1; i++){
+                this._div.innerHTML += '<i style="background:' + getMyColor(grades[i] + 1, bounds) + '"></i> ' + grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            }
+        };
 
         // Récupération de toutes les data une seule fois
         d3.json("/getCountries", function(countries){
@@ -863,6 +833,33 @@
                 layerEarthquake.clearLayers();
                 layerVolcano.clearLayers();
             });
+            // Retour à la vision global
+            $("#resetZoom").click(function(){
+                var val = $("#select_sep").val();
+                if(val == "P"){
+                    layerTsunami.clearLayers();
+                    layerEarthquake.clearLayers();
+                    layerVolcano.clearLayers();
+                    layer.setStyle(style_polygons);
+                    mymap.setView(AutoCenter, AutoZoom);
+                    legend.remove();
+                }
+                else if(val == "C"){
+                    layerTsunami.clearLayers();
+                    layerEarthquake.clearLayers();
+                    layerVolcano.clearLayers();
+                    layer.setStyle(style_polygons);
+                    mymap.setView(AutoCenter, AutoZoom);
+                    legend.remove();
+                }
+                else if(val == "T"){
+                    layerTsunami.clearLayers();
+                    layerEarthquake.clearLayers();
+                    layerVolcano.clearLayers();
+                    mymap.setView(AutoCenter, AutoZoom);
+                    legend.remove();
+                }
+            })
 
             // Choix des événements
             $("#event_btn").click(function(){
@@ -873,6 +870,10 @@
                 else var tsu = false;
                 if($("#vol_event").is(":checked")) var vol = true;
                 else var vol = false;
+                if(!eq && !tsu && !vol){
+                    alert("Choose at least one disaster.")
+                    return;
+                }
                 // Récupération de l'intervalle de temps et sélection des données
                 var array_time = RecupDate();
                 //var final_eq = DataTimed(Data_earthquake, array_time);
@@ -880,53 +881,118 @@
                 var final_tsu = {type :"FeatureCollection", features: DataTimed(Data_tsunami, array_time)};
                 var final_vol = new Array();
                 // Affichage en vision globale
-                if(mymap.getZoom() == AutoZoom){
+                if(mymap.getZoom() == AutoZoom && mymap.getCenter().lat == AutoCenter[0] && mymap.getCenter().lng == AutoCenter[1]){
                     // Récupération du nombre total d'événements
                     all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol);
                     // Modification des GEOJSON de séparations selon
                     var val = $("#select_sep").val();
                     if(val == "P"){
-                        // Modification du GEOJSON pour ajouter la densité
-                        var tmp = {type :"FeatureCollection", features: addDensityToGEOJSON(Data_countries, all_events)};
-                        console.log(tmp);
-                        layer.clearLayers();
-                        layer.addData(tmp);
-                        layer.eachLayer(function(l){
-                            l.setStyle(newStyle(l.feature));
-                        })
-                        // Légende
-                        legend.addTo(mymap);
+                        // récupération d'un data geoJSON avec les densités
+                        var res = addDensityToGEOJSON(Data_countries, all_events);
+                        var tmp = {type :"FeatureCollection", features: res[1]};
+                        // Ajax call to get the bounderies
+                        $.ajax({
+                            data:{
+                                val_array : JSON.stringify(res[0])
+                            },
+                            type:"POST",
+                            url: "/getClasses",
+                            success: function(data){
+                                let bounds = JSON.parse(data);
+                                // Affichage
+                                layer.clearLayers();
+                                layer.addData(tmp);
+                                layer.eachLayer(function(l){
+                                    l.setStyle(newStyle(l.feature, bounds));
+                                });
+                                // légende
+                                legend.addTo(mymap);
+                                legend.update(bounds);
+                            }
+                        });
                     }
                     else if(val == "C"){
-                        var tmp = {type :"FeatureCollection", features: addDensityToGEOJSON(Data_continents, all_events)};
-                        console.log(tmp);
-                        layer.clearLayers();
-                        layer.addData(tmp);
-                        layer.eachLayer(function(l){
-                            l.setStyle(newStyle(l.feature));
-                        })
-                        // Légende
-                        legend.addTo(mymap);
+                        // récupération d'un data geoJSON avec les densités
+                        var res = addDensityToGEOJSON(Data_continents, all_events);
+                        var tmp = {type :"FeatureCollection", features: res[1]};
+                        // Ajax call to get the bounderies
+                        $.ajax({
+                            data:{
+                                val_array : JSON.stringify(res[0])
+                            },
+                            type:"POST",
+                            url: "/getClasses",
+                            success: function(data){
+                                let bounds = JSON.parse(data);
+                                // Affichage
+                                layer.clearLayers();
+                                layer.addData(tmp);
+                                layer.eachLayer(function(l){
+                                    l.setStyle(newStyle(l.feature, bounds));
+                                });
+                                // légende
+                                legend.addTo(mymap);
+                                legend.update(bounds);
+                            }
+                        });
                     }
                     else if(val == "T"){
                         // récupération d'un data geoJSON avec les densités
-                        var tmp = {type :"FeatureCollection", features: addDensityToGEOJSON(Data_tect, all_events)};
-                        console.log(tmp);
-                        // Affichage
-                        layer.clearLayers();
-                        layer.addData(tmp);
-                        layer.eachLayer(function(l){
-                            l.setStyle(newStyle(l.feature));
+                        var res = addDensityToGEOJSON(Data_tect, all_events);
+                        var tmp = {type :"FeatureCollection", features: res[1]};
+                        // Ajax call to get the bounderies
+                        $.ajax({
+                            data:{
+                                val_array : JSON.stringify(res[0])
+                            },
+                            type:"POST",
+                            url: "/getClasses",
+                            success: function(data){
+                                let bounds = JSON.parse(data);
+                                // Affichage
+                                layer.clearLayers();
+                                layer.addData(tmp);
+                                layer.eachLayer(function(l){
+                                    l.setStyle(newStyle(l.feature, bounds));
+                                });
+                                // légende
+                                legend.addTo(mymap);
+                                legend.update(bounds);
+                            }
                         });
-                        // Légende
-                        legend.addTo(mymap);
                     }
                 }
                 // Affichage en vision locale 
                 else{
-                    if(eq) layerEarthquake.addData(final_eq);
-                    if(tsu) layerTsunami.addData(final_tsu);
-                    if(vol) layerVolcano.addData(final_vol);
+                    layer.clearLayers();
+                    var val = $("#select_sep").val();
+                    if(val == "P"){
+                        layer.addData(Data_countries);
+                        layer.setStyle(style_polygons);
+                        legend.remove();
+                    }
+                    if(val == "C"){
+                        layer.addData(Data_continents);
+                        layer.setStyle(style_polygons);
+                        legend.remove();
+                    }
+                    if(val == "T"){
+                        layer.addData(Data_tect);
+                        layer.setStyle(style_polygons);
+                        legend.remove();
+                    }
+                    if(eq){
+                        layerEarthquake.clearLayers();
+                        layerEarthquake.addData(final_eq);
+                    }
+                    if(tsu){
+                        layerTsunami.clearLayers();
+                        layerTsunami.addData(final_tsu);
+                    }
+                    if(vol){
+                        layerVolcano.clearLayers();
+                        layerVolcano.addData(final_vol);
+                    }
                 }
             });
 
