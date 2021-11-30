@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INFOVIS</title>
+    <!-- Import des sources JS -->
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+    <script src="/static/js/leaflet.awesome-markers.js"></script>
+    <script src="/static/dist/leaflet.markercluster-src.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <!-- Import des stylesheets -->
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet'></link>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+    <link rel="stylesheet" href="http://code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css">
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/leaflet.awesome-markers.css"></link>
+    <link rel="stylesheet" href="/static/dist/MarkerCluster.css"></link>
+    <link rel="stylesheet" href="/static/dist/MarkerCluster.Default.css"></link>
+    <!-- Code CSS personnalisé -->
+    <style type="text/css">
+        /* Style pour la légende */
+        .legend {
+            line-height: 18px;
+            color: #555;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        /* Style pour les bartchart */
+        .bar {
+            fill: steelblue;   /* Colors the bars of the bar chart in steelblue */
+        }
+        .axis text {
+            font: 10px sans-serif;   /* Sets the font family to sans-serif the the font-size to 10px */
+        }
+        .axis path {
+            fill: none;   /* Otherwise, the axis would look like a thick line */
+            stroke: #000000;   /* Sets the color of the axis to black */
+        }
+        #plot_facts, #plot_csq {
+            width: 600px;   /* Dimensions of the barchart element */
+            height: 400px;   /* Note : barchart is an svg, thus it is important to set its size, otherwise the elements inside it won't appear */
+        }
+        /* Style pour la carte et ses éléments */
+        #map {
+				width: 1000px;   /* Dimensions of the map element */
+				height: 600px;
+			}
+
+		/* Style pour les différents div */
+        #choice_sep{
+            position: relative;
+            right: -385px;
+            top: -123px;
+        }
+        #choice_events{
+            position: relative;
+            right: -650px;
+            top: -269px;
+        }
+        #facts{
+            position: relative;
+            right: -1100px;
+            top: -1100px;
+            width: 80%;
+        }
+        #csq{
+            position: relative;
+            right: -1100px;
+            top: -1140px;
+            width: 80%;
+        }
+        .nav_btn{
+            position: relative;
+            top: -25px;
+            padding-left: 500px;
+        }
+        /* Styles généraux */
+        h1{
+            font-family: Microsoft YaHei, CSS Fonts List;
+        }
+
+
+    </style>
+</head>
+<body>
+  <!-- Create a div where the graph will take place -->
+  <div id="my_dataviz"></div>
+
+  <script type="text/javascript">
+  function drawConnectedScatterPlot(data){ //(data,where)
+      console.log(dataReady)
+    //document.getElementById(where).innerHTML = "";
+
+  var margin = {top: 20, right: 20, bottom: 70, left: 60},
+      width = 460 - margin.left - margin.right, //width = document.getElementById(where).getBoundingClientRect().width - margin.left - margin.right,
+      height = 400 - margin.top - margin.bottom; //height = document.getElementById(where).getBoundingClientRect().height - margin.top - margin.bottom;
+
+ // echelles
+ var x = d3.scale.linear()
+    .domain(data.map(function(d){
+        return d.year;
+    }))
+    .range([0, width], .1);
+ var y = d3.scale.linear()
+    .domain ([0, d3.max(data, function(d){
+		    return d.damageAmountOrder;
+    })])
+   .range([ height, 0 ]);
+ // axes
+ let xAxis = d3.svg.axis()
+           .scale(x)
+           .orient("bottom");
+  let yAxis = d3.svg.axis()
+       .scale(y)
+       .orient("left");
+
+  var svg = d3.select("#my_dataviz") //+where
+        .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+  svg.append("g")
+      .call(yAxis);
+
+  // Add the lines
+  let line = d3.svg.line()
+    .x(function(d){   // Accessor for x coordinates
+        return x(d.time);
+    })
+    .y(function(d){   // Accessor for y coordinates
+        return y(d.value);
+    });
+  svg.selectAll("myLines")
+    .data(dataReady)
+      .enter()
+      .append("path")
+      .attr("d", function(d){ return line(d.values) } )
+      .attr("stroke",function(d){
+        if (d.name == "valueA") {return "darkgoldenrod"}
+        else if (d.name == "valueB") {return "darkblue"}
+        else {return "darkred"}
+      ;}) // function(d){ return myColor(d.name)}
+      .style("stroke-width", 4)
+      .style("fill", "none")
+   // Add the points
+   svg
+  // First we need to enter in a group
+     .selectAll("myDots")
+     .data(dataReady)
+     .enter()
+     .append('g')
+    .style("fill", function(d){
+      if (d.name == "valueA") {return "darkgoldenrod"}
+      else if (d.name == "valueB") {return "darkblue"}
+      else {return "darkred"}
+      ;})
+      // Second we need to enter in the 'values' part of this group
+      .selectAll("myPoints")
+      .data(function(d){ return d.values })
+      .enter()
+      .append("circle")
+      .attr("cx", function(d) { return x(d.time) } )
+      .attr("cy", function(d) { return y(d.value) } )
+      .attr("r", 5)
+      .attr("stroke", "white")
+
+      // Label
+    svg.append("text")
+          .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top + 30) + ")")   // The label is translated rightwards by half the width of the chart (thus, it will appear at the middle)
+          .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
+          .text("labelX");   // Label
+    svg.append("text")
+          .attr("transform", "rotate(-90)")   // The label is rotated by -90 degrees in order to be written along the y axis
+          .attr("y", 0 - margin.left)   // The element was rotated by -90 degrees -> attention to the coordinates to translate
+          .attr("x", 0 - (height / 2))
+          .attr("dy", "1em")
+          .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
+          .text("labelY");   // Label
+  }
+
+      /*
+    // Add a legend at the end of each line
+    svg
+      .selectAll("myLabels")
+      .data(dataReady)
+      .enter()
+        .append('g')
+        .append("text")
+          .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; }) // keep only the last value of each time series
+          .attr("transform", function(d) { return "translate(" + x(d.value.time) + "," + y(d.value.value) + ")"; }) // Put the text at the position of the last point
+          .attr("x", 12) // shift the text a bit more right
+          .text(function(d) { return d.name; })
+          .style("fill", 'steelblue') //function(d){ return myColor(d.name) }
+          .style("font-size", 15)
+*/
+
+  //Read the data
+  d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_connectedscatter.csv",
+  function(data) {
+    // List of groups (here I have one group per column)
+    var allGroup = ["valueA", "valueB", "valueC"]
+
+    // Reformat the data: we need an array of arrays of {x, y} tuples
+    var dataReady = allGroup.map( function(grpName) { // .map allows to do something for each element of the list
+      return {
+        name: grpName,
+        values: data.map(function(d) {
+          return {time: d.time, value: +d[grpName]};
+        })
+      };
+    });
+    console.log(dataReady)
+    return dataReady;
+  })
+  //console.log(dataReady)
+  drawConnectedScatterPlot(dataReady)
+
+  </script>
+</body>
+</html>
