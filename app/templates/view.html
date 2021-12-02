@@ -747,7 +747,7 @@ function RecupDate() {
           var Time_D_earthquake=DataTimed(Data_earthquake,LimiteDate);
           var Time_D_tsunami=DataTimed(Data_tsunami,LimiteDate);
           var Time_D_volcano=DataTimed(Data_volcano,LimiteDate);
-          var circle=L.circle([0,0],{color:'red',radius:1});
+          var circle=L.circleMarker([0,0],{color:'red',radius:10});
           $("#Date_ok").click(function(){
             LimiteDate=RecupDate();
             if (LimiteDate[0]>LimiteDate[1]){
@@ -759,11 +759,6 @@ function RecupDate() {
               LimiteDate[0]=0;
               LimiteDate[1]=2021;
             }
-            /*
-            if (LimiteDate[0]==LimiteDate[1]) {
-              LimiteDate[0]=LimiteDate[0]-10;
-            }
-            */
             Time_D_earthquake=DataTimed(Data_earthquake,LimiteDate);
             Time_D_tsunami=DataTimed(Data_tsunami,LimiteDate);
             Time_D_volcano=DataTimed(Data_volcano,LimiteDate);
@@ -880,21 +875,42 @@ function RecupDate() {
                           layerEarthquake.addData(Time_D_earthquake);
 
                           for (let i=0;i<Time_D_earthquake.features.length;i++){
-                            circle = L.circle([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:100000});
+                            if (Time_D_earthquake.features[i].properties.gravity==1){
+                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkblue',radius:12});
+                            } else if(Time_D_earthquake.features[i].properties.gravity==2){
+                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkblue',radius:25});
+                            } else if (Time_D_earthquake.features[i].properties.gravity==3){
+                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkblue',radius:35});
+                            }
                             circle.addTo(layerEarthquake);
                           }
                       }
                       if(tsu){
                           layerTsunami.addData(Time_D_tsunami);
                           for (let i=0;i<Time_D_tsunami.features.length;i++){
-                            circle = L.circle([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:100000});
+                            //circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:1});
+                            //console.log(circle.options.radius);
+                            if (Time_D_tsunami.features[i].properties.gravity==1){
+                              circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:12});
+                            } else if(Time_D_tsunami.features[i].properties.gravity==2){
+                              circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:25});
+                            } else if (Time_D_tsunami.features[i].properties.gravity==3){
+                              circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:35});
+                            }
+                            //console.log(circle.options.radius);
                             circle.addTo(layerTsunami);
                           }
                       }
                       if(vol){
                           layerVolcano.addData(Time_D_volcano);
                           for (let i=0;i<Time_D_volcano.features.length;i++){
-                            circle = L.circle([Time_D_volcano.features[i].geometry.coordinates[1],Time_D_volcano.features[i].geometry.coordinates[0]],{color:'darkred',radius:100000});
+                            if (Time_D_volcano.features[i].properties.gravity==1){
+                              circle = L.circleMarker([Time_D_volcano.features[i].geometry.coordinates[1],Time_D_volcano.features[i].geometry.coordinates[0]],{color:'darkred',radius:12});
+                            } else if(Time_D_volcano.features[i].properties.gravity==2){
+                              circle = L.circleMarker([Time_D_volcano.features[i].geometry.coordinates[1],Time_D_volcano.features[i].geometry.coordinates[0]],{color:'darkred',radius:25});
+                            } else if (Time_D_volcano.features[i].properties.gravity==3){
+                              circle = L.circleMarker([Time_D_volcano.features[i].geometry.coordinates[1],Time_D_volcano.features[i].geometry.coordinates[0]],{color:'darkred',radius:35});
+                            }
                             circle.addTo(layerVolcano);
                           }
                       }
