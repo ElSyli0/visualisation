@@ -394,9 +394,6 @@
                 if($("#eq_event").is(":checked")) var vol = true;
                 else var vol = false;
                 // Choses à faire avec les infos...
-                d3.json("/getTect", function(tect){
-                    console.log(tect);
-                })
             });
             // Quoi faire quand le bouton #sep_btn est cliqué
             $("#sep_btn").click(function(){
@@ -612,10 +609,19 @@ function RecupDate() {
                 }
                 if (DataJson[i].year){
                   point.properties.year=DataJson[i].year
-                } else {
-                  point.properties.year=0
+                  if (DataJson[i].intensity>12){
+                    continue;
+                  }else {
+                    if (DataJson[i].intensity>3 && DataJson[i].intensity<7){
+                      point.properties.gravity=1;
+                    } else if(DataJson[i].intensity>6 && DataJson[i].intensity<10){
+                      point.properties.gravity=2;
+                    } else if (DataJson[i].intensity>9 && DataJson[i].intensity<13){
+                      point.properties.gravity=3;
+                    }
+                    features.push(point);
+                  }
                 }
-                features.push(point);
             }
         }
         return features
@@ -623,7 +629,7 @@ function RecupDate() {
     function getGeoJSON_T(DataJson){
         let features =Array();
         for (let i=0;i<DataJson.length;i++){
-            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].eventValidity >= 3  && DataJson[i].latitude > -70 && DataJson[i].latitude < 80) {
+            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].eventValidity >= 3  && DataJson[i].latitude > -70 && DataJson[i].latitude < 80 && DataJson[i].maxWaterHeight) {
                 let point={type:"Feature",
                                 geometry : {
                                     type: "Point",
@@ -640,43 +646,88 @@ function RecupDate() {
                   point.properties.comments ="Nothing to say, glhf"
                 }
                 if (DataJson[i].year){
-                  point.properties.year=DataJson[i].year
-                } else {
-                  point.properties.year=0
-                }
-                features.push(point);
-            }
-        }
-        return features
-    }
-    function getGeoJSON_V(DataJson){
-        let features =Array();
-        for (let i=0;i<DataJson.length;i++){
-            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].latitude > -70 && DataJson[i].latitude < 80) {
-                let point={type:"Feature",
-                                geometry : {
-                                    type: "Point",
-                                    coordinates : [DataJson[i].longitude, DataJson[i].latitude]
-                                },
-                                properties : {
-                                    id : DataJson[i].id,
-                                    intensity : DataJson[i].intensity,
-                                }
-                }
+                  if (DataJson[i].maxWaterHeight>200){
+                    console.log(DataJson[i])
+                    continue;
+                  } else {
+                    if (DataJson[i].maxWaterHeight>=0 && DataJson[i].maxWaterHeight<=3){
+                      point.properties.gravity=1;
+                    } else if(DataJson[i].maxWaterHeight>3 && DataJson[i].maxWaterHeight<=9){
+                      point.properties.gravity=2;
+                    } else if(DataJson[i].maxWaterHeight>9 && DataJson[i].maxWaterHeight<200){
+                      point.properties.gravity=3;
+                    }
+                    point.properties.year=DataJson[i].year
+                    features.push(point);
+                  }
 
-                features.push(point);
+                }
             }
         }
         return features
     }
+    function getGeoJSON_V(DataJson,DataEvents){
+        let features =Array();
+        var cnt=0;
+        var point;
+        var indJson=0
+        var j=0
+        for (let i=0;i<DataEvents.length;i++){
+
+          for (j=0;j<DataJson.length;j++){
+            if (DataJson[j].id ==DataEvents[i].volcanoLocationId){
+              indJson=j
+              break;
+            }
+            if(j==DataJson.length-1){
+              indJson=-1;
+              cnt++;
+            }
+          }
+          if (indJson!=-1){
+            if (DataJson[indJson].longitude && DataJson[indJson].latitude && DataJson[indJson].latitude > -70 && DataJson[indJson].latitude < 80 && DataEvents[i].year && DataEvents[i].vei) {
+              point={type:"Feature",
+                              geometry : {
+                                  type: "Point",
+                                  coordinates : [DataJson[indJson].longitude, DataJson[indJson].latitude]
+                              },
+                              properties : {
+                                  id : DataJson[indJson].id,
+                                  intensity : DataJson[indJson].intensity,
+                                  year : DataEvents[i].year
+                              }
+              }
+              if (DataEvents[i].comments){
+                point.properties.comments = DataEvents[i].comments
+              } else {
+                point.properties.comments = "Nothing to say, glhf"
+              }
+              if (DataEvents[i].vei>12){
+                continue;
+              } else {
+                if (DataEvents[i].vei<3 && DataEvents[i].vei>0){
+                  point.properties.gravity=1;
+                } else if(DataEvents[i].vei<5 && DataEvents[i].vei>2){
+                  point.properties.gravity=2;
+                } else if(DataEvents[i].vei>4 && DataEvents[i].vei<13){
+                  point.properties.gravity=3;
+                }
+                features.push(point)
+              }
+            }
+        }
+    }
+    return features
+  }
     function DataTimed(Data,Time){
-      let features=Array();
+      let retour=Array();
       for (let i=0;i<Data.features.length;i++){
         if (Data.features[i].properties.year > Time[0] && Data.features[i].properties.year < Time[1]){
-          features.push(Data.features[i]);
+          retour.push(Data.features[i]);
         }
       }
-      return features;
+      let tmp={type :"FeatureCollection", features :retour};
+      return tmp
     }
         d3.json("/getContinents", function(continents){   // The code in the function is executed only when the data is loaded. All code requiring that the data is fully loaded shoud come here
         d3.json("/getCountries",function(countries){
@@ -684,17 +735,19 @@ function RecupDate() {
         d3.json("/getEarthquake",function(Da_ear){
         d3.json("/getTsu",function(Da_tsu){
         d3.json("/getVolcanoLoc",function(Da_vol){
+        d3.json("/getVolcanoEvents",function(Da_vol_events){
 
           let Data_earthquake ={type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
           let Data_tsunami ={type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
-          let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol)};
+          let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol,Da_vol_events)};
           let Data_countries ={type :"FeatureCollection",features: Polygon_cleanCountries(countries)};
           let Data_continents ={type :"FeatureCollection",features: Polygon_cleanContinent(continents)};
           let Data_tect ={type :"FeatureCollection",features: Polygon_cleanTect(tect)};
           let LimiteDate=RecupDate();
           var Time_D_earthquake=DataTimed(Data_earthquake,LimiteDate);
           var Time_D_tsunami=DataTimed(Data_tsunami,LimiteDate);
-          var Time_D_volcano=Array();
+          var Time_D_volcano=DataTimed(Data_volcano,LimiteDate);
+          var circle=L.circle([0,0],{color:'red',radius:1});
           $("#Date_ok").click(function(){
             LimiteDate=RecupDate();
             if (LimiteDate[0]>LimiteDate[1]){
@@ -706,12 +759,14 @@ function RecupDate() {
               LimiteDate[0]=0;
               LimiteDate[1]=2021;
             }
+            /*
             if (LimiteDate[0]==LimiteDate[1]) {
               LimiteDate[0]=LimiteDate[0]-10;
             }
+            */
             Time_D_earthquake=DataTimed(Data_earthquake,LimiteDate);
             Time_D_tsunami=DataTimed(Data_tsunami,LimiteDate);
-            //Time_D_volcano=DataTimed(Data_volcano,LimiteDate);
+            Time_D_volcano=DataTimed(Data_volcano,LimiteDate);
           })
           var style_polygons = {
             "fillColor" :'white',
@@ -823,45 +878,28 @@ function RecupDate() {
                     if(mymap.getZoom()!=AutoZoom && mymap.getCenter().lat!=AutoCenter[0] && mymap.getCenter().lng!=AutoCenter[1]){
                       if(eq){
                           layerEarthquake.addData(Time_D_earthquake);
+
+                          for (let i=0;i<Time_D_earthquake.features.length;i++){
+                            circle = L.circle([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:100000});
+                            circle.addTo(layerEarthquake);
+                          }
                       }
                       if(tsu){
                           layerTsunami.addData(Time_D_tsunami);
+                          for (let i=0;i<Time_D_tsunami.features.length;i++){
+                            circle = L.circle([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:100000});
+                            circle.addTo(layerTsunami);
+                          }
                       }
                       if(vol){
-                          layerVolcano.addData(Data_volcano);
+                          layerVolcano.addData(Time_D_volcano);
+                          for (let i=0;i<Time_D_volcano.features.length;i++){
+                            circle = L.circle([Time_D_volcano.features[i].geometry.coordinates[1],Time_D_volcano.features[i].geometry.coordinates[0]],{color:'darkred',radius:100000});
+                            circle.addTo(layerVolcano);
+                          }
                       }
                     }
                 });
-                /*
-                d3.select("#Earthquake")
-                    .on("click",function() {
-                        layerTsunami.addData(Data_earthquake);
-                        layerTsunami.setStyle(MarkerEar);
-                });
-                d3.select("#Tsunami")
-                    .on("click",function() {
-                        /*
-                        console.log(Data_tsunami);
-                        for (let i=0;i<Data_tsunami.features.length;i++) {
-                             layerTsunami=L.marker([Data_tsunami.features[i].geometry.coordinates[0],Data_tsunami.features[i].geometry.coordinates[1]], {icon:MarkerTsu}).addTo(mymap);
-
-                        };
-                        */
-                       /*
-                        layerTsunami.addData(Data_tsunami);
-                        layerTsunami.setStyle(MarkerTsu);
-                        */
-                        //layerTsunami.marker(Data_tsunami, {icon:MarkerTsu}).addTo(mymap);
-                        //layerTsunami.addData(Data_tsunami, {icon: MarkerTsu});
-                        //layerTsunami.setStyle(MarkerTsu);
-                /*
-                });
-                d3.select("#Volcano")
-                    .on("click",function() {
-                        layerTsunami.addData(Data_volcano);
-                        layerTsunami.setStyle(MarkerVol);
-                });
-                */
                 d3.select("#ClearEvents")
                     .on("click",function() {
                       layerTsunami.clearLayers();
@@ -870,6 +908,7 @@ function RecupDate() {
                     });
                 });
             });
+        });
         });
         });
         });
