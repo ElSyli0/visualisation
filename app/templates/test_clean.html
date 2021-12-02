@@ -54,8 +54,8 @@
             stroke: #000000;   /* Sets the color of the axis to black */
         }
         #plot_facts, #plot_csq {
-            width: 600px;   /* Dimensions of the barchart element */
-            height: 400px;   /* Note : barchart is an svg, thus it is important to set its size, otherwise the elements inside it won't appear */
+            width: 550px;   /* Dimensions of the barchart element */
+            height: 350px;   /* Note : barchart is an svg, thus it is important to set its size, otherwise the elements inside it won't appear */
         }
         /* Style pour la carte et ses éléments */
         #map {
@@ -77,13 +77,13 @@
         #facts{
             position: relative;
             right: -1100px;
-            top: -1100px;
+            top: -1040px;
             width: 80%;
         }
         #csq{
             position: relative;
             right: -1100px;
-            top: -1140px;
+            top: -1000px;
             width: 80%;
         }
         .nav_btn{
@@ -210,6 +210,7 @@
         $(document).ready(function(){
             plotEvolutionFrequencyForEarthquakes();
             // Gestion de l'affichage des graphiques en fonction de la flèche sélectionnée
+            /*
             $("button.next_fact").click(function(){
                 var id = $(this).attr("id").replace("next_facts_", "");
                 var tmp = parseInt(id);
@@ -302,6 +303,7 @@
                 txt = "next_csq_"+String(new_id);
                 $("#next_csq_"+tmp).attr("id", txt);
             });
+            */
         });
     </script>
 
@@ -754,6 +756,16 @@
         return [val_array, features];
     }
     
+    // Fonction pour conserver uniquement les événements liés à une délimitation
+    function getLocalEvents(all_events, feature){
+        let features = Array();
+        for(let i=0; i<all_events.length;i++){
+            var event = all_events[i];
+            if(isInFeature(event, feature)) features.push(all_events[i]);
+        }
+        return features;
+    }
+
     // Récupération de tous les évévenements dans un seul array
     function getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol){
         let features = Array();
@@ -790,12 +802,14 @@
     $(document).ready(function(){
         // Forcer la page à 67% de zoom
         document.body.style.zoom = "67%";
+        let local_feature = null;
         // Définitions des fonctions liées aux différentes couches de mymap
         function onEachFeatureDelim(feature, layer){
             if (feature.properties && feature.properties.name) {
                 layer.bindPopup(feature.properties.name);
                 layer.on("click", function(event){
                     mymap.fitBounds(event.target.getBounds());
+                    local_feature = feature;
                 });
             }
         }
@@ -1076,11 +1090,18 @@
                             }
                         });
                     }
-                    // TEST GRAPHE
-                    plotAmountDmg(all_events, "plot_csq");
+                    // Affichage du graphique de conséquences par défaut
+                    var id = $(".prev_csq").attr("id").replace("prev_csq_", "")
+                    if(id != "1") alert("Bad ID.");
+                    else plotAmountDmg(all_events, "plot_csq");
                 }
-                // Affichage en vision locale 
+                // Affichage en vision locale
                 else{
+                    // local_feature contient la feature sur laquellee on a cliquée
+                    all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol); // Tous les événements
+                    all_events = getLocalEvents(all_events, local_feature); // uniquement les événements concernés par local_feature
+                    if(all_events.length == 0) alert("There is no events for your selection.");
+                    var local_events = {type: "FeatureCollection", features: all_events};
                     layer.clearLayers();
                     var val = $("#select_sep").val();
                     if(val == "P"){
@@ -1100,19 +1121,134 @@
                     }
                     if(eq){
                         layerEarthquake.clearLayers();
-                        layerEarthquake.addData(final_eq);
+                        layerEarthquake.addData(local_events);
                     }
                     if(tsu){
                         layerTsunami.clearLayers();
-                        layerTsunami.addData(final_tsu);
+                        layerTsunami.addData(local_events);
                     }
                     if(vol){
                         layerVolcano.clearLayers();
-                        layerVolcano.addData(final_vol);
+                        layerVolcano.addData(local_events);
                     }
                 }
             });
-            // Navigation
+            
+            // Navigation dans les graphiques
+            // Gestion de l'affichage des graphiques en fonction de la flèche sélectionnée
+            $("button.next_fact").click(function(){
+                if(typeof(all_events) != "undefined"){
+                    // Récupération de l'id pour savoir quel graphique afficher
+                    var id = $(this).attr("id").replace("next_facts_", "");
+                    var tmp = parseInt(id);
+                    switch (tmp) {
+                        case 1:
+                            alert("Affichage graph_fact de type 2");
+                            var new_id = 2;
+                            break;
+                        case 2:
+                            alert("Affichage graph_fact de type 3");
+                            var new_id = 3;
+                            break;
+                        case 3:
+                            alert("Affichage graph_fact de type 1");
+                            var new_id = 1;
+                        default:
+                            break;
+                    }
+                    var txt = "next_facts_"+String(new_id);
+                    $(this).attr("id", txt);
+                    txt = "prev_facts_"+String(new_id);
+                    $("#prev_facts_"+tmp).attr("id", txt);
+                }
+            });
+            $("button.prev_fact").click(function(){
+                if(typeof(all_events) != "undefined"){
+                    var id = $(this).attr("id").replace("prev_facts_", "");
+                    var tmp = parseInt(id);
+                    switch (tmp) {
+                        case 1:
+                            alert("Affichage graph_fact de type 3");
+                            var new_id = 3;
+                            break;
+                        case 2:
+                            alert("Affichage graph_fact de type 1");
+                            var new_id = 1;
+                            break;
+                        case 3:
+                            alert("Affichage graph_fact de type 2");
+                            var new_id = 2;
+                        default:
+                            break;
+                    }
+                    var txt = "prev_facts_"+String(new_id);
+                    $(this).attr("id", txt);
+                    txt = "next_facts_"+String(new_id);
+                    $("#next_facts_"+tmp).attr("id", txt);
+                }
+            });
+            $("button.next_csq").click(function(){
+                // Check si all_events existe
+                if(typeof(all_events) != "undefined"){
+                    console.log(all_events);
+                    // Récupération de l'id
+                    var id = $(this).attr("id").replace("next_csq_", "");
+                    var tmp = parseInt(id);
+                    switch (tmp) {
+                        case 1:
+                            alert("Affichage graph_csq de type 2");
+                            var new_id = 2;
+                            document.getElementById("plot_csq").innerHTML = "";
+                            break;
+                        case 2:
+                            alert("Affichage graph_csq de type 3");
+                            var new_id = 3;
+                            document.getElementById("plot_csq").innerHTML = "";
+                            break;
+                        case 3:
+                            alert("Affichage graph_csq de type 1");
+                            var new_id = 1;
+                            // Bart chart des dégâts monétaires
+                            plotAmountDmg(all_events, "plot_csq")
+                        default:
+                            break;
+                    }
+                    var txt = "next_csq_"+String(new_id);
+                    $(this).attr("id", txt);
+                    txt = "prev_csq_"+String(new_id);
+                    $("#prev_csq_"+tmp).attr("id", txt);
+                }
+            });
+            $("button.prev_csq").click(function(){
+                // Check si all_events existe
+                if(typeof(all_events) != "undefined"){
+                    console.log(all_events);
+                    var id = $(this).attr("id").replace("prev_csq_", "");
+                    var tmp = parseInt(id);
+                    switch (tmp) {
+                        case 1:
+                            alert("Affichage graph_csq de type 3");
+                            var new_id = 3;
+                            document.getElementById("plot_csq").innerHTML = "";
+                            break;
+                        case 2:
+                            alert("Affichage graph_csq de type 1");
+                            var new_id = 1;
+                            plotAmountDmg(all_events, "plot_csq");
+                            break;
+                        case 3:
+                            alert("Affichage graph_csq de type 2");
+                            var new_id = 2;
+                            document.getElementById("plot_csq").innerHTML = "";
+                        default:
+                            break;
+                    }
+                    var txt = "prev_csq_"+String(new_id);
+                    $(this).attr("id", txt);
+                    txt = "next_csq_"+String(new_id);
+                    $("#next_csq_"+tmp).attr("id", txt);
+                }
+            });
         });
         });
         });
