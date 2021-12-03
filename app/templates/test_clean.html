@@ -797,8 +797,8 @@
                 }
                 features.push(point);
             } else {
-                console.log(i);
-                console.log(Data.features[i]);
+                //console.log(i);
+                //console.log(Data.features[i]);
             }
         }
         return features
@@ -831,8 +831,8 @@
                 }
                 features.push(point);
             } else {
-                console.log(i);
-                console.log(Data.features[i]);
+                //console.log(i);
+                //console.log(Data.features[i]);
             }
         }
         return features
@@ -865,8 +865,8 @@
                 }
                 features.push(point);
             } else {
-                console.log(i);
-                console.log(Data.features[i]);
+                //console.log(i);
+                //console.log(Data.features[i]);
             }
         }
         return features
@@ -1173,7 +1173,7 @@
             if(bounds.length == 3) var grades = [bounds.b0, bounds.b1, bounds.b2];
             var labels = [];
             for (var i = 0; i < grades.length-1; i++){
-                this._div.innerHTML += '<i style="background:' + getMyColor(grades[i] + 1, bounds) + '"></i> ' + grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+                this._div.innerHTML += '<i style="background:' + getMyColor(grades[i] + 0.01, bounds) + '"></i> ' + grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
             }
         };
 
@@ -1285,7 +1285,11 @@
                 var final_tsu = {type :"FeatureCollection", features: DataTimed(Data_tsunami, array_time)};
                 var final_vol = {type: "FeatureCollection", features: DataTimed(Data_volcano, array_time)};
                 // Affichage en vision globale
-                if(mymap.getZoom() == AutoZoom && mymap.getCenter().lat == AutoCenter[0] && mymap.getCenter().lng == AutoCenter[1]){
+                console.log(mymap.getCenter().lat == AutoCenter[0]);
+                console.log(mymap.getCenter().lat);
+                console.log(AutoCenter[0]);
+                if(mymap.getZoom() == AutoZoom && Math.round(mymap.getCenter().lat) == AutoCenter[0] && mymap.getCenter().lng == AutoCenter[1]){
+                    alert("VISION GLOBALE");
                     // Récupération du nombre total d'événements
                     all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol);
                     if(all_events.length == 0){
@@ -1382,6 +1386,7 @@
                 }
                 // Affichage en vision locale
                 else{
+                    alert("VISION LOCALE");
                     // local_feature contient la feature sur laquellee on a cliquée
                     all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol); // Tous les événements
                     if(all_events.length == 0){
