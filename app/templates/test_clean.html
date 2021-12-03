@@ -450,7 +450,7 @@
     
     function plotLineChart(data, where, check){
         var config = {
-            type: "scatter",
+            type: "line",
             data: data,
             options: {}
         }
@@ -735,10 +735,21 @@
     }
     
     function getMyColor(d, bounds) {
-        if(d >= bounds.b0 && d < bounds.b1) return "#ffffcc";
-        if(d >= bounds.b1 && d < bounds.b2) return "#a1dab4";
-        if(d >= bounds.b2 && d < bounds.b3) return "#41b6c4";
-        if(d >= bounds.b3 && d < bounds.b4) return "#225ea8";
+        if(bounds.length == 5){
+            if(d >= bounds.b0 && d < bounds.b1) return "#ffffcc";
+            if(d >= bounds.b1 && d < bounds.b2) return "#a1dab4";
+            if(d >= bounds.b2 && d < bounds.b3) return "#41b6c4";
+            if(d >= bounds.b3 && d < bounds.b4) return "#225ea8";
+        }
+        if(bounds.length == 4){
+            if(d >= bounds.b0 && d < bounds.b1) return "#ffffcc";
+            if(d >= bounds.b1 && d < bounds.b2) return "#a1dab4";
+            if(d >= bounds.b2 && d < bounds.b3) return "#41b6c4";
+        }
+        if(bounds.length == 3){
+            if(d >= bounds.b0 && d < bounds.b1) return "#ffffcc";
+            if(d >= bounds.b1 && d < bounds.b2) return "#a1dab4";
+        }
     }
 
     function newStyle(feature, bounds){
@@ -1149,7 +1160,7 @@
         
         // Initialisation de la légende pour la carte couleur
         let legend = L.control({position: 'bottomright'});
-        legend.onAdd = function (mymap, bounds) {
+        legend.onAdd = function (mymap) {
             // Vérification si élément déjà existant
             var container = legend.getContainer();
             if(container){
@@ -1159,7 +1170,9 @@
             return this._div;
         };
         legend.update = function(bounds){
-            var grades = [bounds.b0, bounds.b1, bounds.b2, bounds.b3, bounds.b4];
+            if(bounds.length == 5) var grades = [bounds.b0, bounds.b1, bounds.b2, bounds.b3, bounds.b4];
+            if(bounds.length == 4) var grades = [bounds.b0, bounds.b1, bounds.b2, bounds.b3];
+            if(bounds.length == 3) var grades = [bounds.b0, bounds.b1, bounds.b2];
             var labels = [];
             for (var i = 0; i < grades.length-1; i++){
                 this._div.innerHTML += '<i style="background:' + getMyColor(grades[i] + 1, bounds) + '"></i> ' + grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
@@ -1181,7 +1194,6 @@
             let Data_countries = {type :"FeatureCollection", features: Polygon_cleanCountries(countries)};
             let Data_continents = {type :"FeatureCollection", features: Polygon_cleanContinent(continents)};
             let Data_tect = {type :"FeatureCollection", features: Polygon_cleanTect(tect)};
-            console.log(Data_volcano);
             // Par défaut : séparation par pays
             layer.addData(Data_countries);
             layer.setStyle(style_polygons);

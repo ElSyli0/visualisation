@@ -89,4 +89,14 @@ def getClasses():
         x.append(int(e))
     breaks = jenkspy.jenks_breaks(x, nb_class=4)
     print(breaks)
-    return json.dumps({"b0":breaks[0], "b1":breaks[1], "b2":breaks[2], "b3":breaks[3], "b4":breaks[4]})
+    if breaks[0] == breaks[1]:
+        breaks = [breaks[0], breaks[2], breaks[3], breaks[4]]
+        print(breaks)
+        if breaks[0] == breaks[1]:
+            breaks = [breaks[0], breaks[2], breaks[3]]
+            print(breaks)
+            return json.dumps({"length": 3, "b0":breaks[0], "b1":breaks[1], "b2":breaks[2]})
+        else:
+            return json.dumps({"length": 4, "b0":breaks[0], "b1":breaks[1], "b2":breaks[2], "b3":breaks[3]})
+    else:
+        return json.dumps({"length": 5,"b0":breaks[0], "b1":breaks[1], "b2":breaks[2], "b3":breaks[3], "b4":breaks[4]})
