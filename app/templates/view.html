@@ -167,72 +167,6 @@
                 .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
                 .text("occurences");   // Label
 
-
-            /* VERSION 7 de D3.js
-            // Vide le conteneur svg
-            document.getElementById("plot_facts").innerHTML = "";
-            // Dimension
-            let margin = {top: 20, right: 20, bottom: 70, left: 60};
-            let width = document.getElementById("plot_facts").getBoundingClientRect().width - margin.left - margin.right;
-		    let height = document.getElementById("plot_facts").getBoundingClientRect().height - margin.top - margin.bottom;
-            // Gestion de l'axe des abscisses
-            let x = d3.scaleBand()
-			    .range([0, width], .1);
-            x.domain(data.map(function(d){   // data.map(function) returns an array with the same number of entries that the dataset has. For each entry (the parameter d refers to one entry) of the dataset, the transformation defined inside function is applied. The result is the corresponding entry in the array resulting from data.map
-			    return d.intensity;   // The transformation consists of returning d.agent, that is, the agent in the entry d. Thus, it consists of scrapping off the sales amount to keep only the agent's name
-		    }));
-            // Gestion de l'axe des ordonnées
-            let y = d3.scaleLinear()
-			    .range([height, 0]);
-            y.domain([0, d3.max(data, function(d){   // This returns the maximum (d3.max) number encountered after keeping only the sales from the dataset
-                return d.nbr;
-            })]);
-            // Affichage des abscisses
-            let xAxis = d3.axisBottom(x)
-            let yAxis = d3.axisLeft(y)
-            // Affichage des éléments
-            let chart = d3.select("#plot_facts")
-			    .append("g")   // A g element is appended to the barchart svg. It will contain all the graphical elements of the visualization
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-            chart.append("g")
-                .attr("class", "x axis")   // The classes x and axis are assigned to the g element. Thus, the g element has the styles defined for x and axis classes in the CSS code
-                .attr("transform", "translate(0," + height + ")")   // The origin of the bar chart is at the bottom left, but the origin of a SVG element is its top left corner. Thus, the x axis needs to be moved down by height pixels in order to appear at the bottom of the chart
-                .call(xAxis)   // Define that it is the x axis in the g element
-                .selectAll("text")   // A selection is made to gather all the text elements in the x axis (that is, the ticks labels)
-				    .style("text-anchor", "middle")   // The text elements are attached at the middle of their tick
-				    .attr("dy", "0.5em");
-            chart.append("g")
-			    .attr("class", "y axis")   // The classes y and axis are assigned to the g element. Thus, the g element has the styles defined for y and axis classes in the CSS code
-			    .call(yAxis);   // Define that it is the y axis in the g element
-            //
-            chart.selectAll(".bar")
-                .data(data)   // The dataset data is assigned. Elements with the class bar will be created accordingly
-                .enter().append("rect")   // .enter() defines new data elements for which a visual element counterpart (in the present case, a rectangle) needs to be created. The code after .enter() will be executed on each of these visual elements (hence, once per entry in the dataset)
-                    .attr("class", "bar")   // The rectangles have the class bar
-                    .attr("x", function(d){   // The x position of the rectangle is determined by the agent to which the rectangle corresponds
-                        return x(d.intensity);
-                    })
-                    .attr("y", function(d){
-                        return y(d.nbr);   // By default, the bars are aligned to the top of the chart (remember, the origin of a SVG element is at its top left corner). y(d.sales) is the size of the gap between the bar aligned to the top and the x axis
-                    })
-                    .attr("height", function(d){   // The height of each rectangle is computed accordingly to the sales
-                        return height - y(d.nbr);
-                    })
-                    .attr("width", x.bandwidth())   // The width of a bar depends on the space allocated to the bars on the x axis
-            // Label pour abscisses
-            chart.append("text")
-                .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top + 30) + ")")   // The label is translated rightwards by half the width of the chart (thus, it will appear at the middle)
-                .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
-                .text("Intensité");   // Label
-            // Label pour ordonnées
-            chart.append("text")
-                .attr("transform", "rotate(-90)")   // The label is rotated by -90 degrees in order to be written along the y axis
-                .attr("y", 0 - margin.left)   // The element was rotated by -90 degrees -> attention to the coordinates to translate
-                .attr("x", 0 - (height / 2))
-                .attr("dy", "1em")
-                .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
-                .text("Occurence");   // Label
-            */
         }
 
         // function to draw plot about the earthquake
@@ -694,7 +628,9 @@ function RecupDate() {
                               properties : {
                                   id : DataJson[indJson].id,
                                   intensity : DataJson[indJson].intensity,
-                                  year : DataEvents[i].year
+                                  year : DataEvents[i].year,
+                                  type : "vol",
+                                  damage: DataJson[i].damageAmountOrder
                               }
               }
               if (DataEvents[i].comments){
@@ -702,18 +638,16 @@ function RecupDate() {
               } else {
                 point.properties.comments = "Nothing to say, glhf"
               }
-              if (DataEvents[i].vei>12){
-                continue;
+              if (DataEvents[i].vei<3 && DataEvents[i].vei>0){
+                point.properties.gravity=1;
+              } else if(DataEvents[i].vei<5 && DataEvents[i].vei>2){
+                point.properties.gravity=2;
+              } else if(DataEvents[i].vei>4 && DataEvents[i].vei<13){
+                point.properties.gravity=3;
               } else {
-                if (DataEvents[i].vei<3 && DataEvents[i].vei>0){
-                  point.properties.gravity=1;
-                } else if(DataEvents[i].vei<5 && DataEvents[i].vei>2){
-                  point.properties.gravity=2;
-                } else if(DataEvents[i].vei>4 && DataEvents[i].vei<13){
-                  point.properties.gravity=3;
-                }
-                features.push(point)
+                console.log(DataEvents[i]);
               }
+              features.push(point)
             }
         }
     }
@@ -785,8 +719,8 @@ function RecupDate() {
                 var layer=L.geoJSON(Data_countries,{onEachFeature: onEachFeatureDelim}).addTo(mymap);
                 layer.setStyle(style_polygons);
                 var layerTsunami=L.geoJSON(false,
-                  {pointToLayer: function(feature, latlng){
-                    var MarkerTsu = L.AwesomeMarkers.icon({
+                    {pointToLayer: function(feature, latlng){
+                      var MarkerTsu = L.AwesomeMarkers.icon({
                         icon: 'tint',
                         markerColor: 'darkblue',
                         prefix:'fa',
@@ -876,11 +810,11 @@ function RecupDate() {
 
                           for (let i=0;i<Time_D_earthquake.features.length;i++){
                             if (Time_D_earthquake.features[i].properties.gravity==1){
-                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkblue',radius:12});
+                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:12});
                             } else if(Time_D_earthquake.features[i].properties.gravity==2){
-                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkblue',radius:25});
+                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:25});
                             } else if (Time_D_earthquake.features[i].properties.gravity==3){
-                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkblue',radius:35});
+                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:35});
                             }
                             circle.addTo(layerEarthquake);
                           }
@@ -888,8 +822,6 @@ function RecupDate() {
                       if(tsu){
                           layerTsunami.addData(Time_D_tsunami);
                           for (let i=0;i<Time_D_tsunami.features.length;i++){
-                            //circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:1});
-                            //console.log(circle.options.radius);
                             if (Time_D_tsunami.features[i].properties.gravity==1){
                               circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:12});
                             } else if(Time_D_tsunami.features[i].properties.gravity==2){
@@ -897,7 +829,6 @@ function RecupDate() {
                             } else if (Time_D_tsunami.features[i].properties.gravity==3){
                               circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:35});
                             }
-                            //console.log(circle.options.radius);
                             circle.addTo(layerTsunami);
                           }
                       }

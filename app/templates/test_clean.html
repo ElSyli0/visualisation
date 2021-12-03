@@ -447,7 +447,7 @@
             );
         }
     }
-    
+
     function plotLineChart(data, where, check){
         var config = {
             type: "line",
@@ -733,7 +733,7 @@
         var poly = turf.polygon(points);
         return turf.booleanPointInPolygon(pt, poly);
     }
-    
+
     function getMyColor(d, bounds) {
         if(bounds.length == 5){
             if(d >= bounds.b0 && d < bounds.b1) return "#ffffcc";
@@ -761,7 +761,7 @@
             "fillOpacity": 0.5
         };
     }
-    
+
     // Fonctions pour premier nettoyage des données
     function Polygon_cleanCountries(Data){
         let features=Array();
@@ -870,7 +870,7 @@
     function getGeoJSON_E(DataJson){
         let features = Array();
         for (let i=0;i<DataJson.length;i++){
-            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].intensity >3 && DataJson[i].latitude > -70 && DataJson[i].latitude < 80) {
+            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].intensity >3 && DataJson[i].latitude > -70 && DataJson[i].latitude < 80 && DataJson[i].year && DataJson[i].intensity) {
                 let point={type:"Feature",
                                 geometry : {
                                     type: "Point",
@@ -881,17 +881,13 @@
                                     intensity : DataJson[i].intensity,
                                     type: "eq",
                                     damageMoney: DataJson[i].damageAmountOrder,
+                                    year: DataJson[i].year
                                 }
                 }
                 if (DataJson[i].comments) {
                   point.properties.comments = DataJson[i].comments
                 } else {
                   point.properties.comments ="Nothing to say, glhf"
-                }
-                if (DataJson[i].year){
-                  point.properties.year=DataJson[i].year
-                } else {
-                  point.properties.year=0
                 }
                 // gestion de la gravité
                 if(DataJson[i].intensity>3 && DataJson[i].intensity<7) point.properties.gravity=1;
@@ -905,7 +901,7 @@
     function getGeoJSON_T(DataJson){
         let features =Array();
         for (let i=0;i<DataJson.length;i++){
-            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].eventValidity >= 3  && DataJson[i].latitude > -70 && DataJson[i].latitude < 80) {
+            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].eventValidity >= 3  && DataJson[i].latitude > -70 && DataJson[i].latitude < 80 && DataJson[i].year && DataJson[i].maxWaterHeight) {
                 let point={type:"Feature",
                                 geometry : {
                                     type: "Point",
@@ -916,17 +912,13 @@
                                     intensity : DataJson[i].intensity,
                                     type: "tsu",
                                     damageMoney: DataJson[i].damageAmountOrder,
+                                    year: DataJson[i].year
                                 }
                 }
                 if (DataJson[i].comments) {
                   point.properties.comments = DataJson[i].comments
                 } else {
                   point.properties.comments ="Nothing to say, glhf"
-                }
-                if (DataJson[i].year){
-                  point.properties.year=DataJson[i].year
-                } else {
-                  point.properties.year=0
                 }
                 // Gestion de la gravité
                 if (DataJson[i].maxWaterHeight>=0 && DataJson[i].maxWaterHeight<=3) point.properties.gravity=1;
@@ -992,7 +984,7 @@
     }
     return features
   }
-    
+
     // Fonction pour compléter un GEJSON de séparations avec une properties en plus qui est la densité
     // d'accidents
     function addDensityToGEOJSON(Data, all_events){
@@ -1023,7 +1015,7 @@
         }
         return [val_array, features];
     }
-    
+
     function getParticularEvents(all_events, typeEvent){
         var features = Array();
         for(let i=0; i<all_events.length; i++){
@@ -1031,7 +1023,7 @@
         }
         return features;
     }
-    
+
     // Fonction pour conserver uniquement les événements liés à une délimitation
     function getLocalEvents(all_events, feature){
         let features = Array();
@@ -1092,7 +1084,7 @@
         function onEachFeatureEvent(feature, layer) {
             layer.bindPopup(feature.properties.comments);
         }
-        
+
         // Initialisation de la carte
         let AutoZoom = 2;
         let AutoCenter = [30, 0];
@@ -1157,7 +1149,7 @@
             },
             onEachFeature: onEachFeatureEvent
         }).addTo(mymap);
-        
+
         // Initialisation de la légende pour la carte couleur
         let legend = L.control({position: 'bottomright'});
         legend.onAdd = function (mymap) {
@@ -1407,14 +1399,45 @@
                     if(eq){
                         var local_events = {type: "FeatureCollection", features: getParticularEvents(all_events, "eq")}
                         layerEarthquake.addData(local_events);
+                        for (let i=0;i<local_events.features.length;i++){
+                          if (local_events.features[i].properties.gravity==1){
+                            circle = L.circleMarker([local_events.features[i].geometry.coordinates[1],local_events.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:12});
+                          } else if(local_events.features[i].properties.gravity==2){
+                            circle = L.circleMarker([local_events.features[i].geometry.coordinates[1],local_events.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:25});
+                          } else if (local_events.features[i].properties.gravity==3){
+                            circle = L.circleMarker([local_events.features[i].geometry.coordinates[1],local_events.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:35});
+                          }
+                          circle.addTo(layerEarthquake);
+                        }
+
                     }
                     if(tsu){
                         var local_events = {type: "FeatureCollection", features: getParticularEvents(all_events, "tsu")}
                         layerTsunami.addData(local_events);
+                        for (let i=0;i<local_events.features.length;i++){
+                          if (local_events.features[i].properties.gravity==1){
+                            circle = L.circleMarker([local_events.features[i].geometry.coordinates[1],local_events.features[i].geometry.coordinates[0]],{color:'darkblue',radius:12});
+                          } else if(local_events.features[i].properties.gravity==2){
+                            circle = L.circleMarker([local_events.features[i].geometry.coordinates[1],local_events.features[i].geometry.coordinates[0]],{color:'darkblue',radius:25});
+                          } else if (local_events.features[i].properties.gravity==3){
+                            circle = L.circleMarker([local_events.features[i].geometry.coordinates[1],local_events.features[i].geometry.coordinates[0]],{color:'darkblue',radius:35});
+                          }
+                          circle.addTo(layerTsunami);
+                        }
                     }
                     if(vol){
                         var local_events = {type: "FeatureCollection", features: getParticularEvents(all_events, "vol")}
                         layerVolcano.addData(local_events);
+                        for (let i=0;i<local_events.features.length;i++){
+                          if (local_events.features[i].properties.gravity==1){
+                            circle = L.circleMarker([local_events.features[i].geometry.coordinates[1],local_events.features[i].geometry.coordinates[0]],{color:'darkred',radius:12});
+                          } else if(local_events.features[i].properties.gravity==2){
+                            circle = L.circleMarker([local_events.features[i].geometry.coordinates[1],local_events.features[i].geometry.coordinates[0]],{color:'darkred',radius:25});
+                          } else if (local_events.features[i].properties.gravity==3){
+                            circle = L.circleMarker([local_events.features[i].geometry.coordinates[1],local_events.features[i].geometry.coordinates[0]],{color:'darkred',radius:35});
+                          }
+                          circle.addTo(layerVolcano);
+                        }
                     }
                     // Affichage par défaut du graphique de conséquence
                     var id = $(".prev_csq").attr("id").replace("prev_csq_", "");
@@ -1428,7 +1451,7 @@
                     //if(id == "3") //to do
                 }
             });
-            
+
             // Navigation dans les graphiques
             // Gestion de l'affichage des graphiques en fonction de la flèche sélectionnée
             $("button.next_fact").click(function(){
