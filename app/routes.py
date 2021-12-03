@@ -10,14 +10,15 @@ from sqlalchemy.exc import DatabaseError
 #from flask_login import login_required, login_user, logout_user, current_user, LoginManager
 import datetime
 from sqlalchemy import exc
+import jenkspy
 
 
 
 # Page de garde
 @app.route("/")
 def home():
-    form = EventsFiltreForm()
-    return render_template("test.html", form=form)
+    #return render_template("test.html")
+    return render_template("test_clean.html")
     #return render_template("view.html")
 
 @app.route("/getVolcanoEvents")
@@ -75,3 +76,17 @@ def getTsu():
     res = json.load(doc)
     doc.close()
     return json.dumps(res)
+
+@app.route("/getClasses", methods=["POST"])
+def getClasses():
+    val_list = request.form["val_array"]
+    val_list = val_list.replace("[", "")
+    val_list = val_list.replace("]", "")
+    val_list = val_list.replace(",", " ")
+    val_list = val_list.split()
+    x = []
+    for e in val_list:
+        x.append(int(e))
+    breaks = jenkspy.jenks_breaks(x, nb_class=4)
+    print(breaks)
+    return json.dumps({"b0":breaks[0], "b1":breaks[1], "b2":breaks[2], "b3":breaks[3], "b4":breaks[4]})

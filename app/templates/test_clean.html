@@ -15,6 +15,8 @@
     <script src="/static/js/leaflet.awesome-markers.js"></script>
     <script src="/static/dist/leaflet.markercluster-src.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <!-- JS pour graphiques -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Import des stylesheets -->
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet'></link>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -31,29 +33,16 @@
         /* Style pour la légende */
         .legend {
             line-height: 18px;
-            color: #555;
+            background-color: white;
+            border-radius: 5px;
+            height:max-content;
         }
         .legend i {
             width: 18px;
             height: 18px;
             float: left;
             margin-right: 8px;
-            opacity: 0.7;
-        }
-        /* Style pour les bartchart */
-        .bar {
-            fill: steelblue;   /* Colors the bars of the bar chart in steelblue */
-        }
-        .axis text {
-            font: 10px sans-serif;   /* Sets the font family to sans-serif the the font-size to 10px */
-        }
-        .axis path {
-            fill: none;   /* Otherwise, the axis would look like a thick line */
-            stroke: #000000;   /* Sets the color of the axis to black */
-        }
-        #plot_facts, #plot_csq {
-            width: 600px;   /* Dimensions of the barchart element */
-            height: 400px;   /* Note : barchart is an svg, thus it is important to set its size, otherwise the elements inside it won't appear */
+            opacity: 0.5;
         }
         /* Style pour la carte et ses éléments */
         #map {
@@ -65,31 +54,41 @@
         #choice_sep{
             position: relative;
             right: -385px;
-            top: -123px;
+            top: -100px;
         }
         #choice_events{
             position: relative;
             right: -650px;
-            top: -269px;
+            top: -225px;
         }
         #facts{
             position: relative;
             right: -1100px;
-            top: -1100px;
-            width: 80%;
+            top: -1040px;
+            width: 750px;
+            height: 373px;
         }
         #csq{
             position: relative;
             right: -1100px;
-            top: -1140px;
-            width: 80%;
+            top: -1000px;
+            width: 750px;
+            height: 373px;
         }
-        .nav_btn{
-            position: relative;
-            top: -25px;
-            padding-left: 500px;
+        #nav_btn_facts{
+            position: fixed;
+            bottom: 510px;
+            right: 1000px;
+        }
+        #nav_btn_csq{
+            position: fixed;
+            bottom: 110px;
+            right: 1000px;
         }
         /* Styles généraux */
+        body{
+            overflow: hidden;
+        }
         h1{
             font-family: Microsoft YaHei, CSS Fonts List;
         }
@@ -206,8 +205,9 @@
 
         // Tout ce qui sera dans cette fonction sera possible une fois que la page sera chargée
         $(document).ready(function(){
-            plotEvolutionFrequencyForEarthquakes();
+            //plotEvolutionFrequencyForEarthquakes();
             // Gestion de l'affichage des graphiques en fonction de la flèche sélectionnée
+            /*
             $("button.next_fact").click(function(){
                 var id = $(this).attr("id").replace("next_facts_", "");
                 var tmp = parseInt(id);
@@ -300,6 +300,7 @@
                 txt = "next_csq_"+String(new_id);
                 $("#next_csq_"+tmp).attr("id", txt);
             });
+            */
         });
     </script>
 
@@ -310,44 +311,44 @@
 
     <!-- div pour le choix des dates -->
     <div id="choice_date">
-        <h3>Choix de l'intervalle de de temps</h3>
+        <h3>Choice for time range (lower/upper bound)</h3>
         <input type="number" id="DateInf" value="-500">
-        <input type="number" id="DateSup" value="2022"><br><br>
+        <input type="number" id="DateSup" value="2021"><br><br>
     </div>
 
     <!-- div pour choix des séparations (Pays/Plaques/Continents) -->
     <div id="choice_sep">
-        <h2>Choix des délimitations</h2>
-        <!--label for="select_sep">délimitations :</label-->
+        <h2>Which delimitations ?</h2>
         <select name="select_sep" id="select_sep">
-            <option value="P">Pays</option>
-            <option value="T">Plaques tectoniques</option>
+            <option value="P">Countries</option>
+            <option value="T">Tectonic plates</option>
             <option value="C">Continents</option>
         </select><br><br>
 
+        <button id="resetZoom">global view</button>
         <button id="ClearDelim">Clear</button>
     </div>
 
     <!-- div pour choix des events-->
     <div id="choice_events">
-        <h2>Choix des événements</h2>
-        <label for="eq_event">Tremblement de terre :</label>
+        <h2>Which disaster ?</h2>
+        <label for="eq_event">Earthquakes :</label>
         <input type="checkbox" name="eq_event" id="eq_event"><br>
 
-        <label for="tsu_event">Tsunami :</label>
+        <label for="tsu_event">Tsunamis :</label>
         <input type="checkbox" name="tsu_event" id="tsu_event"><br>
 
-        <label for="vol_event">Éruption : </label>
+        <label for="vol_event">Volcanos : </label>
         <input type="checkbox" name="vol_event" id="vol_event"><br><br>
 
-        <button id="event_btn">Validation</button><br>
-        <button id="ClearEvents">Clear_events</button>
+        <button id="event_btn">Validation</button>
+        <button id="ClearEvents">Clear</button>
     </div>
 
     <!-- div pour affichage des graphiques sur les faits -->
     <div id="facts">
-        <svg id="plot_facts"></svg>
-        <div class="nav_btn">
+        <canvas id="plot_facts"></canvas>
+        <div id="nav_btn_facts">
             <button class="prev_fact" id="prev_facts_1">&larr;</button>
             <button class="next_fact" id="next_facts_1">&rarr;</button>
         </div>
@@ -355,8 +356,8 @@
 
     <!-- div pour affichage des graphique sur les conséquences -->
     <div id="csq">
-        <svg id="plot_csq"></svg>
-        <div class="nav_btn">
+        <canvas id="plot_csq"></canvas>
+        <div id="nav_btn_csq">
             <button class="prev_csq" id="prev_csq_1">&larr;</button>
             <button class="next_csq" id="next_csq_1">&rarr;</button>
         </div>
@@ -366,6 +367,332 @@
 </html>
 
 <script type="text/javascript">
+
+    function getLabelsForTime(array_time){
+        var labels = Array();
+        var year = array_time[0];
+        while(year <= array_time[1]){
+            labels.push(year);
+            year ++;
+        }
+        return labels;
+    }
+
+    function getNbrEventsPerYear(all_events, typeEvent, labels){
+        // Initialisation des nbrs d'événements par année
+        var res = Array();
+        for(let i=0; i<labels.length; i++){
+            res.push(0);
+        }
+        // Mise à jour
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent){
+                var year = all_events[i].properties.year;
+                var index = labels.indexOf(year);
+                res[index] = res[index] + 1;
+            }
+        }
+        return res;
+    }
+
+    function getMoneyForEvents(all_events, typeEvent){
+        var res = [0, 0, 0, 0];
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent){
+                var val = all_events[i].properties.damageMoney - 1;
+                res[val] = res[val] + 1;
+            }
+        }
+        return res;
+    }
+
+    function getGravityForEvents(all_events, typeEvent){
+        var res = [0, 0, 0];
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent){
+                var val = all_events[i].properties.gravity - 1;
+                res[val] = res[val] + 1;
+            }
+        }
+        return res;
+    }
+
+    /* ZONE POUR GRAPHIQUE */
+    function plotBarChart(data, where, check){
+        var config = {
+            type: "bar",
+            data: data,
+            options: {
+                events: []
+            }
+        }
+        if(check == "C"){
+            // check is plot existe déjà
+            if(typeof(plot_c) != "undefined"){
+                plot_c.destroy();
+            }
+            plot_c = new Chart(
+                document.getElementById(where),
+                config
+            );
+        }
+        else{
+            // check is plot existe déjà
+            if(typeof(plot_f) != "undefined"){
+                plot_f.destroy();
+            }
+            plot_f = new Chart(
+                document.getElementById(where),
+                config
+            );
+        }
+    }
+    
+    function plotLineChart(data, where, check){
+        var config = {
+            type: "scatter",
+            data: data,
+            options: {}
+        }
+        if(check == "C"){
+            if(typeof(plot_c) != "undefined") plot_c.destroy();
+            plot_c = new Chart(
+                document.getElementById(where),
+                config
+            );
+        }
+        else{
+            if(typeof(plot_f) != "undefined") plot_f.destroy();
+            plot_f = new Chart(
+                document.getElementById(where),
+                config
+            );
+        }
+    }
+    // Transformer les features pour chaque events en données lisibles pour affichage graphique
+    function showMoneyDmg(all_events, where, eq, tsu, vol){
+        // Gestion des labels pour chaque classe
+        var labels = ["Limited (<$1 million)", "Moderate (~$1 to $5 million)", "Severe (~>$5 to $24 million)", "Extreme (~$25 million or more)"];
+        // Gestion des données
+        var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                data: getMoneyForEvents(all_events, "eq")
+            }
+            all_data.push(tmp)
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                data: getMoneyForEvents(all_events, "tsu")
+            }
+            all_data.push(tmp)
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                data: getMoneyForEvents(all_events, "vol")
+            }
+            all_data.push(tmp)
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        }
+        // Affichage
+        plotBarChart(data, where, "C");
+    }
+
+    function showGravityEvents(all_events, where, eq, tsu, vol){
+        // Gestion des labels
+        var labels = ["Weak", "Strong", "Severe"];
+        // Gestion des données
+        var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                data: getGravityForEvents(all_events, "eq")
+            }
+            all_data.push(tmp);
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                data: getGravityForEvents(all_events, "tsu")
+            }
+            all_data.push(tmp);
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                data: getGravityForEvents(all_events, "vol")
+            }
+            all_data.push(tmp);
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        }
+        // Affichage
+        plotBarChart(data, where, "F");
+    }
+
+    function showNbrEventsEvolution(all_events, where, eq, tsu, vol, array_time){
+        // gestion des labels
+        labels = getLabelsForTime(array_time);
+        var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                borderColor: "orange",
+                data: getNbrEventsPerYear(all_events, "eq", labels)
+            }
+            all_data.push(tmp);
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                borderColor: "darkblue",
+                data: getNbrEventsPerYear(all_events, "tsu", labels)
+            }
+            all_data.push(tmp);
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                borderColor: "darkred",
+                data: getNbrEventsPerYear(all_events, "vol", labels)
+            }
+            all_data.push(tmp);
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        };
+        // Affichage
+        plotLineChart(data, where, "F");
+    }
+    /**********************************/
+    //
+    function drawBartChartForAmount(data, where, x_label, y_label){
+        document.getElementById(where).innerHTML = "";
+        // Dimensions du graphe
+        let margin = {top: 20, right: 20, bottom: 70, left: 60};
+        let width = document.getElementById(where).getBoundingClientRect().width - margin.left - margin.right;
+        let height = document.getElementById(where).getBoundingClientRect().height - margin.top - margin.bottom;
+        // Echelles
+        let x = d3.scale.ordinal()
+            .rangeBands([0, width], .1);
+        x.domain(data.map(function(d){
+            return d.intensity;
+        }));
+        let y = d3.scale.linear()
+            .range([height, 0]);
+        y.domain([0, d3.max(data, function(d){
+            return d.nbr;
+        })]);
+        // Axes
+        let xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+        let yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left")
+        // Éléments visuels
+        let chart = d3.select("#"+where)
+            .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        chart.append("g")
+            .attr("class", "x axis")   // The classes x and axis are assigned to the g element. Thus, the g element has the styles defined for x and axis classes in the CSS code
+            .attr("transform", "translate(0," + height + ")")   // The origin of the bar chart is at the bottom left, but the origin of a SVG element is its top left corner. Thus, the x axis needs to be moved down by height pixels in order to appear at the bottom of the chart
+            .call(xAxis)   // Define that it is the x axis in the g element
+            .selectAll("text")   // A selection is made to gather all the text elements in the x axis (that is, the ticks labels)
+                .style("text-anchor", "middle")   // The text elements are attached at the middle of their tick
+                .attr("dy", "0.5em");
+        chart.append("g")
+            .attr("class", "y axis")   // The classes y and axis are assigned to the g element. Thus, the g element has the styles defined for y and axis classes in the CSS code
+            .call(yAxis);
+        chart.selectAll(".bar")
+            .data(data)   // The dataset data is assigned. Elements with the class bar will be created accordingly
+            .enter().append("rect")   // .enter() defines new data elements for which a visual element counterpart (in the present case, a rectangle) needs to be created. The code after .enter() will be executed on each of these visual elements (hence, once per entry in the dataset)
+                .attr("class", "bar")   // The rectangles have the class bar
+                .attr("x", function(d){   // The x position of the rectangle is determined by the agent to which the rectangle corresponds
+                    return x(d.intensity);
+                })
+                .attr("y", function(d){
+                    return y(d.nbr);   // By default, the bars are aligned to the top of the chart (remember, the origin of a SVG element is at its top left corner). y(d.sales) is the size of the gap between the bar aligned to the top and the x axis
+                })
+                .attr("height", function(d){   // The height of each rectangle is computed accordingly to the sales
+                    return height - y(d.nbr);
+                })
+                .attr("width", x.rangeBand())   // The width of a bar depends on the space allocated to the bars on the x axis
+        // Ajout des labels
+        chart.append("text")
+            .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top + 30) + ")")   // The label is translated rightwards by half the width of the chart (thus, it will appear at the middle)
+            .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
+            .text(x_label);   // Label
+        chart.append("text")
+            .attr("transform", "rotate(-90)")   // The label is rotated by -90 degrees in order to be written along the y axis
+            .attr("y", 0 - margin.left)   // The element was rotated by -90 degrees -> attention to the coordinates to translate
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
+            .text(y_label);   // Label
+    }
+
+    //
+    function countInstance(val, x){
+        count = 0;
+        for (let i = 0; i < x.length; i++) {
+            if(x[i] == val) count ++;
+        }
+        return count;
+    }
+    // Bart chart pour afficher la distribution de dégat selon un certains nombre d'événements
+    function plotAmountDmg(all_events, where){
+        // Création d'un array pour conserver les différentes intensités
+        var x = [];
+        for (let i = 0; i < all_events.length; i++) {
+            const element = all_events[i];
+            var tmp = element.properties.damage;
+            if(tmp){
+                x.push(tmp);
+            }
+        }
+        // création d'un objet "data" pour l'affichage d'un bart chart
+        var max_x = d3.max(x);
+        var min_x = d3.min(x);
+        var y = [];
+        for (let i = min_x; i <= max_x; i++) {
+            var tmp = {};
+            if(i == 0) tmp["meaning"] = "None";
+            else if(i == 1) tmp["meaning"] = "Limited (<$1 million)";
+            else if(i == 2) tmp["meaning"] = "Moderate (~$1 to $5 million)";
+            else if(i == 3) tmp["meaning"] = "Severe (~>$5 to $24 million)";
+            else if(i == 4) tmp["meaning"] = "Extreme (~$25 million or more)";
+            tmp["intensity"] = i;
+            tmp["nbr"] = countInstance(i, x)
+            y.push(tmp);
+        }
+        var y_label = "Occurences";
+        var x_label = "Amount damages";
+        drawBartChartForAmount(y, where, x_label, y_label);
+    }
+
+
     // Récupération de la date sous forme de array [b_inf, b_sup]
     function RecupDate() {
         // Récupération des bornes pour l'intervalle de temps
@@ -407,29 +734,20 @@
         return turf.booleanPointInPolygon(pt, poly);
     }
     
-    function getMyColor(d) {
-        return  d > 20  ?   "#a50f15" :
-                d > 10  ?   "#de2d26" :
-                d > 5   ?   "#fb6a4a" :
-                d > 0.1 ?   "#fcae91" :
-                            "#fee5d9";
-    /*
-    return d > 1000 ? '#800026' :
-           d > 500  ? '#BD0026' :
-           d > 200  ? '#E31A1C' :
-           d > 100  ? '#FC4E2A' :
-           d > 50   ? '#FD8D3C' :
-           d > 20   ? '#FEB24C' :
-           d > 10   ? '#FED976' :
-                      '#FFEDA0';*/
+    function getMyColor(d, bounds) {
+        if(d >= bounds.b0 && d < bounds.b1) return "#ffffcc";
+        if(d >= bounds.b1 && d < bounds.b2) return "#a1dab4";
+        if(d >= bounds.b2 && d < bounds.b3) return "#41b6c4";
+        if(d >= bounds.b3 && d < bounds.b4) return "#225ea8";
     }
 
-    function newStyle(feature){
+    function newStyle(feature, bounds){
         return {
-            "fillColor" : getMyColor(feature.properties.density),
-            "color" : "#f55919",
-            "opacity" : 1,
-            "dashArray": '20,10'
+            "fillColor" : getMyColor(feature.properties.nbr, bounds),
+            "wheight": 2,
+            "opacity": 1,
+            "dashArray": "3",
+            "fillOpacity": 0.5
         };
     }
     
@@ -550,7 +868,8 @@
                                 properties : {
                                     id : DataJson[i].id,
                                     intensity : DataJson[i].intensity,
-                                    country : DataJson[i].country,
+                                    type: "eq",
+                                    damageMoney: DataJson[i].damageAmountOrder,
                                 }
                 }
                 if (DataJson[i].comments) {
@@ -563,6 +882,10 @@
                 } else {
                   point.properties.year=0
                 }
+                // gestion de la gravité
+                if(DataJson[i].intensity>3 && DataJson[i].intensity<7) point.properties.gravity=1;
+                else if(DataJson[i].intensity>6 && DataJson[i].intensity<10) point.properties.gravity=2;
+                else if (DataJson[i].intensity>9 && DataJson[i].intensity<13) point.properties.gravity=3;
                 features.push(point);
             }
         }
@@ -580,6 +903,8 @@
                                 properties : {
                                     id : DataJson[i].id,
                                     intensity : DataJson[i].intensity,
+                                    type: "tsu",
+                                    damageMoney: DataJson[i].damageAmountOrder,
                                 }
                 }
                 if (DataJson[i].comments) {
@@ -592,55 +917,85 @@
                 } else {
                   point.properties.year=0
                 }
+                // Gestion de la gravité
+                if (DataJson[i].maxWaterHeight>=0 && DataJson[i].maxWaterHeight<=3) point.properties.gravity=1;
+                if(DataJson[i].maxWaterHeight>3 && DataJson[i].maxWaterHeight<=9) point.properties.gravity=2;
+                if(DataJson[i].maxWaterHeight>9 && DataJson[i].maxWaterHeight<200) point.properties.gravity=3;
                 features.push(point);
             }
         }
         return features
     }
-    function getGeoJSON_V(DataJson){
-        let features =Array();
-        for (let i=0;i<DataJson.length;i++){
-            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].latitude > -70 && DataJson[i].latitude < 80) {
-                let point={type:"Feature",
-                                geometry : {
-                                    type: "Point",
-                                    coordinates : [DataJson[i].longitude, DataJson[i].latitude]
-                                },
-                                properties : {
-                                    id : DataJson[i].id,
-                                    intensity : DataJson[i].intensity,
-                                }
-                }
+    function getGeoJSON_V(DataJson, DataEvents){
+        let features = Array();
+        var cnt=0;
+        var point;
+        var indJson=0
+        var j=0
+        for (let i=0;i<DataEvents.length;i++){
 
-                features.push(point);
+          for (j=0;j<DataJson.length;j++){
+            if (DataJson[j].id ==DataEvents[i].volcanoLocationId){
+              indJson=j
+              break;
+            }
+            if(j==DataJson.length-1){
+              indJson=-1;
+              cnt++;
+            }
+          }
+          if (indJson!=-1){
+            if (DataJson[indJson].longitude && DataJson[indJson].latitude && DataJson[indJson].latitude > -70 && DataJson[indJson].latitude < 80 && DataEvents[i].year && DataEvents[i].vei) {
+              point={type:"Feature",
+                              geometry : {
+                                  type: "Point",
+                                  coordinates : [DataJson[indJson].longitude, DataJson[indJson].latitude]
+                              },
+                              properties : {
+                                  id : DataJson[indJson].id,
+                                  intensity : DataJson[indJson].intensity,
+                                  year : DataEvents[i].year,
+                                  type: "vol",
+                                  damageMoney: DataEvents[i].damageAmountOrder
+                              }
+              }
+              if (DataEvents[i].comments){
+                point.properties.comments = DataEvents[i].comments
+              } else {
+                point.properties.comments = "Nothing to say, glhf"
+              }
+              if (DataEvents[i].vei>12){
+                continue;
+              } else {
+                if (DataEvents[i].vei<3 && DataEvents[i].vei>0){
+                  point.properties.gravity=1;
+                } else if(DataEvents[i].vei<5 && DataEvents[i].vei>2){
+                  point.properties.gravity=2;
+                } else if(DataEvents[i].vei>4 && DataEvents[i].vei<13){
+                  point.properties.gravity=3;
+                }
+                features.push(point)
+              }
             }
         }
-        return features;
     }
+    return features
+  }
+    
     // Fonction pour compléter un GEJSON de séparations avec une properties en plus qui est la densité
     // d'accidents
     function addDensityToGEOJSON(Data, all_events){
         var count_total = all_events.length;
         var features = Array();
-        var check = 0;
-        var check_rate = 0;
-        var max = 0;
-        var min = Infinity;
-        var max_rate = 0; // pourcentage
-        var min_rate = 200;
+        var val_array = Array();
         for(let i = 0; i < Data.features.length; i++){
             // Calcul du taux d'incidents pour la feature i
             var count = 0
             for(let j=0; j<all_events.length; j++){
                 if(isInFeature(all_events[j], Data.features[i])) count ++;
             }
-            check = check + count;
+            val_array.push(count);
             var rate = (count/count_total) * 100;
-            check_rate = check_rate + rate;
-            if(count > max) max = count;
-            if(count < min) min = count;
-            if(rate > max_rate) max_rate = rate;
-            if(rate < min_rate) min_rate = rate;
             // Création d'un nouvel élément pour features
             let point = {type:"Feature",
                             geometry :{
@@ -655,19 +1010,27 @@
             }
             features.push(point);
         }
-        console.log(all_events.length);
-        console.log(check);
-        console.log(min);
-        console.log(max);
-        console.log(check/Data.features.length);
-        console.log("rate test");
-        console.log(check_rate);
-        console.log(min_rate);
-        console.log(max_rate);
-        console.log(check_rate/Data.features.length)
+        return [val_array, features];
+    }
+    
+    function getParticularEvents(all_events, typeEvent){
+        var features = Array();
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent) features.push(all_events[i]);
+        }
         return features;
     }
     
+    // Fonction pour conserver uniquement les événements liés à une délimitation
+    function getLocalEvents(all_events, feature){
+        let features = Array();
+        for(let i=0; i<all_events.length;i++){
+            var event = all_events[i];
+            if(isInFeature(event, feature)) features.push(all_events[i]);
+        }
+        return features;
+    }
+
     // Récupération de tous les évévenements dans un seul array
     function getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol){
         let features = Array();
@@ -702,12 +1065,16 @@
 
     // MAIN FUNCTION (tout ce qui se passe dedans sera possible une fois que la page sera correctement chargée)
     $(document).ready(function(){
+        // Forcer la page à 67% de zoom
+        document.body.style.zoom = "67%";
+        let local_feature = null;
         // Définitions des fonctions liées aux différentes couches de mymap
         function onEachFeatureDelim(feature, layer){
             if (feature.properties && feature.properties.name) {
                 layer.bindPopup(feature.properties.name);
                 layer.on("click", function(event){
                     mymap.fitBounds(event.target.getBounds());
+                    local_feature = feature;
                 });
             }
         }
@@ -782,26 +1149,22 @@
         
         // Initialisation de la légende pour la carte couleur
         let legend = L.control({position: 'bottomright'});
-        legend.onAdd = function (mymap) {
+        legend.onAdd = function (mymap, bounds) {
             // Vérification si élément déjà existant
             var container = legend.getContainer();
-            console.log(container);
             if(container){
                 L.DomUtil.remove(container);
             }
-            var div = L.DomUtil.create('div', 'legend');
-            var grades = [0, 10, 20, 50, 100, 200, 500, 1000];
-            var labels = [];
-            // loop through our density intervals and generate a label with a colored square for each interval
-            for (var i = 0; i < grades.length; i++) {
-                div.innerHTML += '<i style="background:' + getMyColor(grades[i] + 1) + '"></i> ' + grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-            }
-            return div;
+            this._div = L.DomUtil.create('div', 'legend');
+            return this._div;
         };
-        /*legend.onRemove = function(mymap) {
-            var container = legend.getContainer();
-            console.log(container);
-        };*/
+        legend.update = function(bounds){
+            var grades = [bounds.b0, bounds.b1, bounds.b2, bounds.b3, bounds.b4];
+            var labels = [];
+            for (var i = 0; i < grades.length-1; i++){
+                this._div.innerHTML += '<i style="background:' + getMyColor(grades[i] + 1, bounds) + '"></i> ' + grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            }
+        };
 
         // Récupération de toutes les data une seule fois
         d3.json("/getCountries", function(countries){
@@ -809,14 +1172,16 @@
         d3.json("/getTect", function(tect){
         d3.json("/getEarthquake", function(Da_ear){
         d3.json("/getTsu", function(Da_tsu){
-        d3.json("/getVolcanoEvents", function(Da_vol){ // LIGNE A MODIFIER SELON LE TRAITEMENT DES VOLCANS
+        d3.json("/getVolcanoLoc", function(Da_vol){
+        d3.json("/getVolcanoEvents", function(Da_vol_events){ // LIGNE A MODIFIER SELON LE TRAITEMENT DES VOLCANS
             // Traitement des données
             let Data_earthquake = {type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
             let Data_tsunami = {type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
-            let Data_volcano = {type :"FeatureCollection", features: getGeoJSON_V(Da_vol)};
+            let Data_volcano = {type :"FeatureCollection", features: getGeoJSON_V(Da_vol, Da_vol_events)};
             let Data_countries = {type :"FeatureCollection", features: Polygon_cleanCountries(countries)};
             let Data_continents = {type :"FeatureCollection", features: Polygon_cleanContinent(continents)};
             let Data_tect = {type :"FeatureCollection", features: Polygon_cleanTect(tect)};
+            console.log(Data_volcano);
             // Par défaut : séparation par pays
             layer.addData(Data_countries);
             layer.setStyle(style_polygons);
@@ -863,73 +1228,305 @@
                 layerEarthquake.clearLayers();
                 layerVolcano.clearLayers();
             });
+            // Retour à la vision global
+            $("#resetZoom").click(function(){
+                var val = $("#select_sep").val();
+                if(val == "P"){
+                    layerTsunami.clearLayers();
+                    layerEarthquake.clearLayers();
+                    layerVolcano.clearLayers();
+                    layer.setStyle(style_polygons);
+                    mymap.setView(AutoCenter, AutoZoom);
+                    legend.remove();
+                }
+                else if(val == "C"){
+                    layerTsunami.clearLayers();
+                    layerEarthquake.clearLayers();
+                    layerVolcano.clearLayers();
+                    layer.setStyle(style_polygons);
+                    mymap.setView(AutoCenter, AutoZoom);
+                    legend.remove();
+                }
+                else if(val == "T"){
+                    layerTsunami.clearLayers();
+                    layerEarthquake.clearLayers();
+                    layerVolcano.clearLayers();
+                    mymap.setView(AutoCenter, AutoZoom);
+                    legend.remove();
+                }
+            })
 
             // Choix des événements
             $("#event_btn").click(function(){
                 // Récupération des valeurs dans les différents inputs
-                if($("#eq_event").is(":checked")) var eq = true;
-                else var eq = false;
-                if($("#tsu_event").is(":checked")) var tsu = true;
-                else var tsu = false;
-                if($("#vol_event").is(":checked")) var vol = true;
-                else var vol = false;
+                if($("#eq_event").is(":checked"))  eq = true;
+                else  eq = false;
+                if($("#tsu_event").is(":checked"))  tsu = true;
+                else  tsu = false;
+                if($("#vol_event").is(":checked"))  vol = true;
+                else  vol = false;
+                if(!eq && !tsu && !vol){
+                    alert("Choose at least one disaster.")
+                    return;
+                }
                 // Récupération de l'intervalle de temps et sélection des données
-                var array_time = RecupDate();
-                //var final_eq = DataTimed(Data_earthquake, array_time);
+                array_time = RecupDate();
                 var final_eq = {type :"FeatureCollection", features: DataTimed(Data_earthquake, array_time)};
                 var final_tsu = {type :"FeatureCollection", features: DataTimed(Data_tsunami, array_time)};
-                var final_vol = new Array();
+                var final_vol = {type: "FeatureCollection", features: DataTimed(Data_volcano, array_time)};
                 // Affichage en vision globale
-                if(mymap.getZoom() == AutoZoom){
+                if(mymap.getZoom() == AutoZoom && mymap.getCenter().lat == AutoCenter[0] && mymap.getCenter().lng == AutoCenter[1]){
                     // Récupération du nombre total d'événements
                     all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol);
                     // Modification des GEOJSON de séparations selon
                     var val = $("#select_sep").val();
                     if(val == "P"){
-                        // Modification du GEOJSON pour ajouter la densité
-                        var tmp = {type :"FeatureCollection", features: addDensityToGEOJSON(Data_countries, all_events)};
-                        console.log(tmp);
-                        layer.clearLayers();
-                        layer.addData(tmp);
-                        layer.eachLayer(function(l){
-                            l.setStyle(newStyle(l.feature));
-                        })
-                        // Légende
-                        legend.addTo(mymap);
+                        // récupération d'un data geoJSON avec les densités
+                        var res = addDensityToGEOJSON(Data_countries, all_events);
+                        var tmp = {type :"FeatureCollection", features: res[1]};
+                        // Ajax call to get the bounderies
+                        $.ajax({
+                            data:{
+                                val_array : JSON.stringify(res[0])
+                            },
+                            type:"POST",
+                            url: "/getClasses",
+                            success: function(data){
+                                let bounds = JSON.parse(data);
+                                // Affichage
+                                layer.clearLayers();
+                                layer.addData(tmp);
+                                layer.eachLayer(function(l){
+                                    l.setStyle(newStyle(l.feature, bounds));
+                                });
+                                // légende
+                                legend.addTo(mymap);
+                                legend.update(bounds);
+                            }
+                        });
                     }
                     else if(val == "C"){
-                        var tmp = {type :"FeatureCollection", features: addDensityToGEOJSON(Data_continents, all_events)};
-                        console.log(tmp);
-                        layer.clearLayers();
-                        layer.addData(tmp);
-                        layer.eachLayer(function(l){
-                            l.setStyle(newStyle(l.feature));
-                        })
-                        // Légende
-                        legend.addTo(mymap);
+                        // récupération d'un data geoJSON avec les densités
+                        var res = addDensityToGEOJSON(Data_continents, all_events);
+                        var tmp = {type :"FeatureCollection", features: res[1]};
+                        // Ajax call to get the bounderies
+                        $.ajax({
+                            data:{
+                                val_array : JSON.stringify(res[0])
+                            },
+                            type:"POST",
+                            url: "/getClasses",
+                            success: function(data){
+                                let bounds = JSON.parse(data);
+                                // Affichage
+                                layer.clearLayers();
+                                layer.addData(tmp);
+                                layer.eachLayer(function(l){
+                                    l.setStyle(newStyle(l.feature, bounds));
+                                });
+                                // légende
+                                legend.addTo(mymap);
+                                legend.update(bounds);
+                            }
+                        });
                     }
                     else if(val == "T"){
                         // récupération d'un data geoJSON avec les densités
-                        var tmp = {type :"FeatureCollection", features: addDensityToGEOJSON(Data_tect, all_events)};
-                        console.log(tmp);
-                        // Affichage
-                        layer.clearLayers();
-                        layer.addData(tmp);
-                        layer.eachLayer(function(l){
-                            l.setStyle(newStyle(l.feature));
+                        var res = addDensityToGEOJSON(Data_tect, all_events);
+                        var tmp = {type :"FeatureCollection", features: res[1]};
+                        // Ajax call to get the bounderies
+                        $.ajax({
+                            data:{
+                                val_array : JSON.stringify(res[0])
+                            },
+                            type:"POST",
+                            url: "/getClasses",
+                            success: function(data){
+                                let bounds = JSON.parse(data);
+                                // Affichage
+                                layer.clearLayers();
+                                layer.addData(tmp);
+                                layer.eachLayer(function(l){
+                                    l.setStyle(newStyle(l.feature, bounds));
+                                });
+                                // légende
+                                legend.addTo(mymap);
+                                legend.update(bounds);
+                            }
                         });
-                        // Légende
-                        legend.addTo(mymap);
                     }
+                    // Affichage par défaut du graphique de conséquence
+                    var id = $(".prev_csq").attr("id").replace("prev_csq_", "");
+                    if(id == "1") showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
+                    //if(id == "2") //to do
+                    //if(id == "3") //to do
+                    // Affichage du graphique de faits par défaut
+                    var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
+                    if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
+                    if(id == "2") showNbrEventsEvolution(all_events, "plot_facts", eq, tsu, vol, array_time);
+                    //if(id == "3") //to do
                 }
-                // Affichage en vision locale 
+                // Affichage en vision locale
                 else{
-                    if(eq) layerEarthquake.addData(final_eq);
-                    if(tsu) layerTsunami.addData(final_tsu);
-                    if(vol) layerVolcano.addData(final_vol);
+                    // local_feature contient la feature sur laquellee on a cliquée
+                    all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol); // Tous les événements
+                    all_events = getLocalEvents(all_events, local_feature); // uniquement les événements concernés par local_feature
+                    if(all_events.length == 0) alert("There is no events for your selection.");
+                    layer.clearLayers();
+                    var val = $("#select_sep").val();
+                    if(val == "P"){
+                        layer.addData(Data_countries);
+                        layer.setStyle(style_polygons);
+                        legend.remove();
+                    }
+                    if(val == "C"){
+                        layer.addData(Data_continents);
+                        layer.setStyle(style_polygons);
+                        legend.remove();
+                    }
+                    if(val == "T"){
+                        layer.addData(Data_tect);
+                        layer.setStyle(style_polygons);
+                        legend.remove();
+                    }
+                    layerEarthquake.clearLayers();
+                    layerTsunami.clearLayers();
+                    layerVolcano.clearLayers();
+                    if(eq){
+                        var local_events = {type: "FeatureCollection", features: getParticularEvents(all_events, "eq")}
+                        layerEarthquake.addData(local_events);
+                    }
+                    if(tsu){
+                        var local_events = {type: "FeatureCollection", features: getParticularEvents(all_events, "tsu")}
+                        layerTsunami.addData(local_events);
+                    }
+                    if(vol){
+                        var local_events = {type: "FeatureCollection", features: getParticularEvents(all_events, "vol")}
+                        layerVolcano.addData(local_events);
+                    }
+                    // Affichage par défaut du graphique de conséquence
+                    var id = $(".prev_csq").attr("id").replace("prev_csq_", "");
+                    if(id == "1") showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
+                    //if(id == "2") //to do
+                    //if(id == "3") //to do
+                    // Affichage du graphique de faits par défaut
+                    var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
+                    if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
+                    if(id == "2") showNbrEventsEvolution(all_events, "plot_facts", eq, tsu, vol, array_time);
+                    //if(id == "3") //to do
                 }
             });
-
+            
+            // Navigation dans les graphiques
+            // Gestion de l'affichage des graphiques en fonction de la flèche sélectionnée
+            $("button.next_fact").click(function(){
+                if(typeof(all_events) != "undefined"){
+                    // Récupération de l'id pour savoir quel graphique afficher
+                    var id = $(this).attr("id").replace("next_facts_", "");
+                    var tmp = parseInt(id);
+                    switch (tmp) {
+                        case 1:
+                            var new_id = 2;
+                            showNbrEventsEvolution(all_events, "plot_facts", eq, tsu, vol, array_time);
+                            break;
+                        case 2:
+                            plot_f.destroy();
+                            var new_id = 3;
+                            break;
+                        case 3:
+                            var new_id = 1;
+                            // Bar chart des gravités
+                            showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
+                        default:
+                            break;
+                    }
+                    var txt = "next_facts_"+String(new_id);
+                    $(this).attr("id", txt);
+                    txt = "prev_facts_"+String(new_id);
+                    $("#prev_facts_"+tmp).attr("id", txt);
+                }
+            });
+            $("button.prev_fact").click(function(){
+                if(typeof(all_events) != "undefined"){
+                    var id = $(this).attr("id").replace("prev_facts_", "");
+                    var tmp = parseInt(id);
+                    switch (tmp) {
+                        case 1:
+                            var new_id = 3;
+                            plot_f.destroy();
+                            break;
+                        case 2:
+                            var new_id = 1;
+                            // Bar chart des gravités
+                            showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
+                            break;
+                        case 3:
+                            var new_id = 2;
+                            showNbrEventsEvolution(all_events, "plot_facts", eq, tsu, vol, array_time);
+                        default:
+                            break;
+                    }
+                    var txt = "prev_facts_"+String(new_id);
+                    $(this).attr("id", txt);
+                    txt = "next_facts_"+String(new_id);
+                    $("#next_facts_"+tmp).attr("id", txt);
+                }
+            });
+            $("button.next_csq").click(function(){
+                // Check si all_events existe
+                if(typeof(all_events) != "undefined"){
+                    // Récupération de l'id
+                    var id = $(this).attr("id").replace("next_csq_", "");
+                    var tmp = parseInt(id);
+                    switch (tmp) {
+                        case 1:
+                            var new_id = 2;
+                            plot_c.destroy();
+                            break;
+                        case 2:
+                            var new_id = 3;
+                            plot_c.destroy();
+                            break;
+                        case 3:
+                            var new_id = 1;
+                            // Bar chart des dégâts monétaires
+                            showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
+                        default:
+                            break;
+                    }
+                    var txt = "next_csq_"+String(new_id);
+                    $(this).attr("id", txt);
+                    txt = "prev_csq_"+String(new_id);
+                    $("#prev_csq_"+tmp).attr("id", txt);
+                }
+            });
+            $("button.prev_csq").click(function(){
+                // Check si all_events existe
+                if(typeof(all_events) != "undefined"){
+                    var id = $(this).attr("id").replace("prev_csq_", "");
+                    var tmp = parseInt(id);
+                    switch (tmp) {
+                        case 1:
+                            var new_id = 3;
+                            plot_c.destroy();
+                            break;
+                        case 2:
+                            var new_id = 1;
+                            showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
+                            break;
+                        case 3:
+                            var new_id = 2;
+                            plot_c.destroy();
+                        default:
+                            break;
+                    }
+                    var txt = "prev_csq_"+String(new_id);
+                    $(this).attr("id", txt);
+                    txt = "next_csq_"+String(new_id);
+                    $("#next_csq_"+tmp).attr("id", txt);
+                }
+            });
+        });
         });
         });
         });
