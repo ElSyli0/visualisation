@@ -78,16 +78,16 @@
         #nav_btn_facts{
             position: fixed;
             bottom: 510px;
-            right: 1000px;
+            right: 800px;
         }
         #nav_btn_csq{
             position: fixed;
             bottom: 110px;
-            right: 1000px;
+            right: 800px;
         }
         /* Styles généraux */
         body{
-            overflow: hidden;
+            /*overflow: hidden;*/
         }
         h1{
             font-family: Microsoft YaHei, CSS Fonts List;
@@ -326,7 +326,7 @@
         </select><br><br>
 
         <button id="resetZoom">global view</button>
-        <button id="ClearDelim">Clear</button>
+        <!--button id="ClearDelim">Clear</button-->
     </div>
 
     <!-- div pour choix des events-->
@@ -342,7 +342,7 @@
         <input type="checkbox" name="vol_event" id="vol_event"><br><br>
 
         <button id="event_btn">Validation</button>
-        <button id="ClearEvents">Clear</button>
+        <!--button id="ClearEvents">Clear</button-->
     </div>
 
     <!-- div pour affichage des graphiques sur les faits -->
@@ -370,7 +370,7 @@
 
     function getLabelsForTime(array_time){
         var labels = Array();
-        var year = array_time[0];
+        var year = parseInt(array_time[0]);
         while(year <= array_time[1]){
             labels.push(year);
             year ++;
@@ -452,7 +452,13 @@
         var config = {
             type: "line",
             data: data,
-            options: {}
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
         }
         if(check == "C"){
             if(typeof(plot_c) != "undefined") plot_c.destroy();
@@ -1056,10 +1062,10 @@
     }
 
     // Sélection des données en fonction d'une période de temps choisie
-    function DataTimed(Data,Time){
+    function DataTimed(Data, Time){
         let features=Array();
         for (let i=0; i<Data.features.length; i++){
-            if (Data.features[i].properties.year > Time[0] && Data.features[i].properties.year < Time[1]){
+            if (Data.features[i].properties.year >= Time[0] && Data.features[i].properties.year <= Time[1]){
                 features.push(Data.features[i]);
             }
         }
@@ -1282,6 +1288,10 @@
                 if(mymap.getZoom() == AutoZoom && mymap.getCenter().lat == AutoCenter[0] && mymap.getCenter().lng == AutoCenter[1]){
                     // Récupération du nombre total d'événements
                     all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol);
+                    if(all_events.length == 0){
+                        alert("There is no events for your selection.");
+                        return;
+                    }
                     // Modification des GEOJSON de séparations selon
                     var val = $("#select_sep").val();
                     if(val == "P"){
@@ -1374,8 +1384,11 @@
                 else{
                     // local_feature contient la feature sur laquellee on a cliquée
                     all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol); // Tous les événements
+                    if(all_events.length == 0){
+                        alert("There is no events for your selection.");
+                        return;
+                    }
                     all_events = getLocalEvents(all_events, local_feature); // uniquement les événements concernés par local_feature
-                    if(all_events.length == 0) alert("There is no events for your selection.");
                     layer.clearLayers();
                     var val = $("#select_sep").val();
                     if(val == "P"){
