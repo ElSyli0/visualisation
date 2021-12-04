@@ -141,7 +141,7 @@
                 .attr("class", "x axis")   // The classes x and axis are assigned to the g element. Thus, the g element has the styles defined for x and axis classes in the CSS code
                 .attr("transform", "translate(0," + height + ")")   // The origin of the bar chart is at the bottom left, but the origin of a SVG element is its top left corner. Thus, the x axis needs to be moved down by height pixels in order to appear at the bottom of the chart
                 .call(xAxis)   // Define that it is the x axis in the g element
-                .selectAll("text")   // A selection is made to gather all the text elements in the x axis (that is, the ticks labels)
+                .selectAll("text")   // A selection is made to gather all the text elements in the x axis (that is, the ticks)
                     .style("text-anchor", "middle")   // The text elements are attached at the middle of their tick
                     .attr("dy", "0.5em");
             chart.append("g")
@@ -1071,6 +1071,14 @@
         }
         return features;
     }
+    // sélection du rayon pour la légende
+    //additional
+    function getRadius(r) {
+      return  r > 30 ? 35 :
+        r > 20 ? 25 :
+        r > 10 ? 12 :
+        0;
+      }
 
     // MAIN FUNCTION (tout ce qui se passe dedans sera possible une fois que la page sera correctement chargée)
     $(document).ready(function(){
@@ -1176,6 +1184,25 @@
                 this._div.innerHTML += '<i style="background:' + getMyColor(grades[i] + 0.01, bounds) + '"></i> ' + grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
             }
         };
+        //additional
+        var legendCircle = L.control({position: 'bottomright'});
+         legendCircle.onAdd = function (mymap) {
+           var container = legend.getContainer();
+           if(container){
+               L.DomUtil.remove(container);
+           }
+           var div = L.DomUtil.create('div', 'info legend');
+           grades = [12, 25, 35],
+           labels = ['Gravity of event'],
+           categories = ['Weak','Strong','Severe'];
+           for (var i = 0; i < grades.length; i++) {
+                var grade = grades[i];//*0.5;
+           labels.push(
+                '<i class="circlepadding" style="width: '+Math.max(8,(7-2.2*getRadius(grade)))+'px;"></i> <i style="background: #8080A0; width: '+getRadius(grade)*2+'px; height: '+getRadius(grade)*2+'px; border-radius: 50%; margin-top: '+Math.max(0,(9-getRadius(grade)))+'px;"></i><i class="circlepadding" style="width: '+Math.max(2,(25-2*getRadius(grade)))+'px;"></i> ' + categories[i]);
+           }
+         div.innerHTML = labels.join('<br>');
+         return div;
+         };
 
         // Récupération de toutes les data une seule fois
         d3.json("/getCountries", function(countries){
@@ -1207,6 +1234,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
+                    legendCircle.remove();
                 }
                 else if(val == "C"){
                     layerTsunami.clearLayers();
@@ -1217,6 +1245,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
+                    legendCircle.remove();
                 }
                 else if(val == "T"){
                     layerTsunami.clearLayers();
@@ -1227,6 +1256,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
+                    legendCircle.remove();
                 }
             };
             // Clear buttons
@@ -1248,6 +1278,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
+                    legendCircle.remove();
                 }
                 else if(val == "C"){
                     layerTsunami.clearLayers();
@@ -1256,6 +1287,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
+                    legendCircle.remove();
                 }
                 else if(val == "T"){
                     layerTsunami.clearLayers();
@@ -1263,6 +1295,7 @@
                     layerVolcano.clearLayers();
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
+                    legendCircle.remove();
                 }
             })
 
@@ -1318,6 +1351,7 @@
                                     l.setStyle(newStyle(l.feature, bounds));
                                 });
                                 // légende
+                                legendCircle.remove();
                                 legend.addTo(mymap);
                                 legend.update(bounds);
                             }
@@ -1343,8 +1377,10 @@
                                     l.setStyle(newStyle(l.feature, bounds));
                                 });
                                 // légende
+                                legendCircle.remove();
                                 legend.addTo(mymap);
                                 legend.update(bounds);
+
                             }
                         });
                     }
@@ -1368,6 +1404,7 @@
                                     l.setStyle(newStyle(l.feature, bounds));
                                 });
                                 // légende
+                                legendCircle.remove();
                                 legend.addTo(mymap);
                                 legend.update(bounds);
                             }
@@ -1400,16 +1437,19 @@
                         layer.addData(Data_countries);
                         layer.setStyle(style_polygons);
                         legend.remove();
+                        legendCircle.addTo(mymap);
                     }
                     if(val == "C"){
                         layer.addData(Data_continents);
                         layer.setStyle(style_polygons);
                         legend.remove();
+                        legendCircle.addTo(mymap);
                     }
                     if(val == "T"){
                         layer.addData(Data_tect);
                         layer.setStyle(style_polygons);
                         legend.remove();
+                        legendCircle.addTo(mymap);
                     }
                     layerEarthquake.clearLayers();
                     layerTsunami.clearLayers();
