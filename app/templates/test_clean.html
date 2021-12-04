@@ -24,7 +24,7 @@
     crossorigin=""/>
     <link rel="stylesheet" href="http://code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css">
     <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <!--link rel="stylesheet" href="/static/css/style.css"-->
     <link rel="stylesheet" href="/static/css/leaflet.awesome-markers.css"></link>
     <link rel="stylesheet" href="/static/dist/MarkerCluster.css"></link>
     <link rel="stylesheet" href="/static/dist/MarkerCluster.Default.css"></link>
@@ -205,102 +205,7 @@
 
         // Tout ce qui sera dans cette fonction sera possible une fois que la page sera chargée
         $(document).ready(function(){
-            //plotEvolutionFrequencyForEarthquakes();
-            // Gestion de l'affichage des graphiques en fonction de la flèche sélectionnée
-            /*
-            $("button.next_fact").click(function(){
-                var id = $(this).attr("id").replace("next_facts_", "");
-                var tmp = parseInt(id);
-                switch (tmp) {
-                    case 1:
-                        alert("Affichage graph_fact de type 2");
-                        var new_id = 2;
-                        break;
-                    case 2:
-                        alert("Affichage graph_fact de type 3");
-                        var new_id = 3;
-                        break;
-                    case 3:
-                        alert("Affichage graph_fact de type 1");
-                        var new_id = 1;
-                    default:
-                        break;
-                }
-                var txt = "next_facts_"+String(new_id);
-                $(this).attr("id", txt);
-                txt = "prev_facts_"+String(new_id);
-                $("#prev_facts_"+tmp).attr("id", txt);
-            });
-            $("button.prev_fact").click(function(){
-                var id = $(this).attr("id").replace("prev_facts_", "");
-                var tmp = parseInt(id);
-                switch (tmp) {
-                    case 1:
-                        alert("Affichage graph_fact de type 3");
-                        var new_id = 3;
-                        break;
-                    case 2:
-                        alert("Affichage graph_fact de type 1");
-                        var new_id = 1;
-                        break;
-                    case 3:
-                        alert("Affichage graph_fact de type 2");
-                        var new_id = 2;
-                    default:
-                        break;
-                }
-                var txt = "prev_facts_"+String(new_id);
-                $(this).attr("id", txt);
-                txt = "next_facts_"+String(new_id);
-                $("#next_facts_"+tmp).attr("id", txt);
-            });
-            $("button.next_csq").click(function(){
-                var id = $(this).attr("id").replace("next_csq_", "");
-                var tmp = parseInt(id);
-                switch (tmp) {
-                    case 1:
-                        alert("Affichage graph_csq de type 2");
-                        var new_id = 2;
-                        break;
-                    case 2:
-                        alert("Affichage graph_csq de type 3");
-                        var new_id = 3;
-                        break;
-                    case 3:
-                        alert("Affichage graph_csq de type 1");
-                        var new_id = 1;
-                    default:
-                        break;
-                }
-                var txt = "next_csq_"+String(new_id);
-                $(this).attr("id", txt);
-                txt = "prev_csq_"+String(new_id);
-                $("#prev_csq_"+tmp).attr("id", txt);
-            });
-            $("button.prev_csq").click(function(){
-                var id = $(this).attr("id").replace("prev_csq_", "");
-                var tmp = parseInt(id);
-                switch (tmp) {
-                    case 1:
-                        alert("Affichage graph_csq de type 3");
-                        var new_id = 3;
-                        break;
-                    case 2:
-                        alert("Affichage graph_csq de type 1");
-                        var new_id = 1;
-                        break;
-                    case 3:
-                        alert("Affichage graph_csq de type 2");
-                        var new_id = 2;
-                    default:
-                        break;
-                }
-                var txt = "prev_csq_"+String(new_id);
-                $(this).attr("id", txt);
-                txt = "next_csq_"+String(new_id);
-                $("#next_csq_"+tmp).attr("id", txt);
-            });
-            */
+
         });
     </script>
 
@@ -417,13 +322,61 @@
         return res;
     }
 
+    function getDeathForEvents(all_events, typeEvent){
+        var res = [0, 0, 0, 0];
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent){
+                var val = all_events[i].properties.damageDeath - 1;
+                res[val] = res[val] + 1;
+            }
+        }
+        return res;
+    }
+
+    function getHouseForEvents(all_events, typeEvent){
+        var res = [0, 0, 0, 0];
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent){
+                var val = all_events[i].properties.destroyedHouse - 1;
+                res[val] = res[val] + 1;
+            }
+        }
+        return res;
+    }
+
     /* ZONE POUR GRAPHIQUE */
-    function plotBarChart(data, where, check){
+    function plotBarChart(data, where, check, titre, labelX, labelY){
         var config = {
             type: "bar",
             data: data,
             options: {
-                events: []
+                //events: []
+                responsive: true,
+                plugins:{
+                  legend:{
+                    position: 'right',
+                  },
+                  title:{
+                    display: true,
+                    text: titre
+                  }
+                },
+                scales:{
+                  x:{
+                    //type:"time",
+                    title:{
+                      display: true,
+                      text:labelX
+                    }
+                  },
+                  y:{
+                    //type:"time",
+                    title:{
+                      display: true,
+                      text:labelY
+                    }
+                  }
+                }
             }
         }
         if(check == "C"){
@@ -448,16 +401,36 @@
         }
     }
 
-    function plotLineChart(data, where, check){
+    function plotLineChart(data, where, check, titre, labelX, labelY){
         var config = {
             type: "line",
             data: data,
             options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+              responsive: true,
+              plugins:{
+                legend:{
+                  position:'right',
+                },
+                title:{
+                  display: true,
+                  text: titre
+                }
+              },
+              scales: {
+                x:{
+                  title:{
+                    display: true,
+                    text:labelX
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  title:{
+                      display: true,
+                      text:labelY
                     }
                 }
+              }
             }
         }
         if(check == "C"){
@@ -475,6 +448,7 @@
             );
         }
     }
+
     // Transformer les features pour chaque events en données lisibles pour affichage graphique
     function showMoneyDmg(all_events, where, eq, tsu, vol){
         // Gestion des labels pour chaque classe
@@ -511,7 +485,83 @@
             datasets: all_data
         }
         // Affichage
-        plotBarChart(data, where, "C");
+        plotBarChart(data, where, "C","Economic loss","Category","Occurrence");
+    }
+
+    function showDeathDmg(all_events, where, eq, tsu, vol){
+      // Gestion des labels pour chaque classe
+      var labels = ["Few (~1 to 50 people)", "Some (~51 to 100 people)", "Many (~101 to 1000 people)", "Very Many (~1001 or more people)"];
+      // Gestion des données
+      var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                data: getDeathForEvents(all_events, "eq")
+            }
+            all_data.push(tmp)
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                data: getDeathForEvents(all_events, "tsu")
+            }
+            all_data.push(tmp)
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                data: getDeathForEvents(all_events, "vol")
+            }
+            all_data.push(tmp)
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        }
+        // Affichage
+        plotBarChart(data, where, "C","Loss of human life","Category","Occurrence");
+    }
+
+    function showHouseDst(all_events, where, eq, tsu, vol){
+      // Gestion des labels pour chaque classe
+      var labels = ["Few (~1 to 50 houses)", "Some (~51 to 100 houses)", "Many (~101 to 1000 houses)", "Very Many (~1001 or more houses)"];
+      // Gestion des données
+      var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                data: getHouseForEvents(all_events, "eq")
+            }
+            all_data.push(tmp)
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                data: getHouseForEvents(all_events, "tsu")
+            }
+            all_data.push(tmp)
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                data: getHouseForEvents(all_events, "vol")
+            }
+            all_data.push(tmp)
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        }
+        // Affichage
+        plotBarChart(data, where, "C","Destroyed house","Category","Occurrence");
     }
 
     function showGravityEvents(all_events, where, eq, tsu, vol){
@@ -549,7 +599,7 @@
             datasets: all_data
         }
         // Affichage
-        plotBarChart(data, where, "F");
+        plotBarChart(data, where, "F","Gravity of events ","Category","Occurrence");
     }
 
     function showNbrEventsEvolution(all_events, where, eq, tsu, vol, array_time){
@@ -589,10 +639,10 @@
             datasets: all_data
         };
         // Affichage
-        plotLineChart(data, where, "F");
+        plotLineChart(data, where, "F","Evolution of the number of events over time","Years","Value");
     }
     /**********************************/
-    //
+    /*
     function drawBartChartForAmount(data, where, x_label, y_label){
         document.getElementById(where).innerHTML = "";
         // Dimensions du graphe
@@ -697,7 +747,8 @@
         var x_label = "Amount damages";
         drawBartChartForAmount(y, where, x_label, y_label);
     }
-
+    */
+   /**********************************/
 
     // Récupération de la date sous forme de array [b_inf, b_sup]
     function RecupDate() {
@@ -887,6 +938,9 @@
                                     intensity : DataJson[i].intensity,
                                     type: "eq",
                                     damageMoney: DataJson[i].damageAmountOrder,
+                                    damageDeath: DataJson[i].deathsAmountOrder,
+                                    //damageHouse: DataJson[i].housesDamagedAmountOrder,
+                                    destroyedHouse: DataJson[i].housesDestroyedAmountOrder,
                                     year: DataJson[i].year
                                 }
                 }
@@ -918,6 +972,9 @@
                                     intensity : DataJson[i].intensity,
                                     type: "tsu",
                                     damageMoney: DataJson[i].damageAmountOrder,
+                                    damageDeath: DataJson[i].deathsAmountOrder,
+                                    //damageHouse: DataJson[i].housesDamagedAmountOrder,
+                                    destroyedHouse: DataJson[i].housesDestroyedAmountOrder,
                                     year: DataJson[i].year
                                 }
                 }
@@ -965,7 +1022,10 @@
                                   intensity : DataJson[indJson].intensity,
                                   year : DataEvents[i].year,
                                   type: "vol",
-                                  damageMoney: DataEvents[i].damageAmountOrder
+                                  damageMoney: DataEvents[i].damageAmountOrder,
+                                  damageDeath: DataEvents[i].deathsAmountOrder
+                                  //damageHouse: DataJson[i].housesDamagedAmountOrder,
+                                  //destroyedHouse: DataEvents[i].housesDestroyedAmountOrder
                               }
               }
               if (DataEvents[i].comments){
@@ -1318,11 +1378,7 @@
                 var final_tsu = {type :"FeatureCollection", features: DataTimed(Data_tsunami, array_time)};
                 var final_vol = {type: "FeatureCollection", features: DataTimed(Data_volcano, array_time)};
                 // Affichage en vision globale
-                console.log(mymap.getCenter().lat == AutoCenter[0]);
-                console.log(mymap.getCenter().lat);
-                console.log(AutoCenter[0]);
                 if(mymap.getZoom() == AutoZoom && Math.round(mymap.getCenter().lat) == AutoCenter[0] && mymap.getCenter().lng == AutoCenter[1]){
-                    alert("VISION GLOBALE");
                     // Récupération du nombre total d'événements
                     all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol);
                     if(all_events.length == 0){
@@ -1413,24 +1469,22 @@
                     // Affichage par défaut du graphique de conséquence
                     var id = $(".prev_csq").attr("id").replace("prev_csq_", "");
                     if(id == "1") showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
-                    //if(id == "2") //to do
-                    //if(id == "3") //to do
+                    if(id == "2") showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
+                    if(id == "3") showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                     // Affichage du graphique de faits par défaut
                     var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
                     if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
                     if(id == "2") showNbrEventsEvolution(all_events, "plot_facts", eq, tsu, vol, array_time);
-                    //if(id == "3") //to do
                 }
                 // Affichage en vision locale
                 else{
-                    alert("VISION LOCALE");
                     // local_feature contient la feature sur laquellee on a cliquée
                     all_events = getAllEvents(final_eq, final_tsu, final_vol, eq, tsu, vol); // Tous les événements
+                    all_events = getLocalEvents(all_events, local_feature); // uniquement les événements concernés par local_feature
                     if(all_events.length == 0){
                         alert("There is no events for your selection.");
                         return;
                     }
-                    all_events = getLocalEvents(all_events, local_feature); // uniquement les événements concernés par local_feature
                     layer.clearLayers();
                     var val = $("#select_sep").val();
                     if(val == "P"){
@@ -1500,13 +1554,12 @@
                     // Affichage par défaut du graphique de conséquence
                     var id = $(".prev_csq").attr("id").replace("prev_csq_", "");
                     if(id == "1") showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
-                    //if(id == "2") //to do
-                    //if(id == "3") //to do
+                    if(id == "2") showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
+                    if(id == "3") showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                     // Affichage du graphique de faits par défaut
                     var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
                     if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
                     if(id == "2") showNbrEventsEvolution(all_events, "plot_facts", eq, tsu, vol, array_time);
-                    //if(id == "3") //to do
                 }
             });
 
@@ -1523,10 +1576,6 @@
                             showNbrEventsEvolution(all_events, "plot_facts", eq, tsu, vol, array_time);
                             break;
                         case 2:
-                            plot_f.destroy();
-                            var new_id = 3;
-                            break;
-                        case 3:
                             var new_id = 1;
                             // Bar chart des gravités
                             showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
@@ -1545,17 +1594,14 @@
                     var tmp = parseInt(id);
                     switch (tmp) {
                         case 1:
-                            var new_id = 3;
-                            plot_f.destroy();
+                            var new_id = 2;
+                            showNbrEventsEvolution(all_events, "plot_facts", eq, tsu, vol, array_time);
                             break;
                         case 2:
                             var new_id = 1;
                             // Bar chart des gravités
                             showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
                             break;
-                        case 3:
-                            var new_id = 2;
-                            showNbrEventsEvolution(all_events, "plot_facts", eq, tsu, vol, array_time);
                         default:
                             break;
                     }
@@ -1574,16 +1620,17 @@
                     switch (tmp) {
                         case 1:
                             var new_id = 2;
-                            plot_c.destroy();
+                            showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
                             break;
                         case 2:
                             var new_id = 3;
-                            plot_c.destroy();
+                            showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                             break;
                         case 3:
                             var new_id = 1;
                             // Bar chart des dégâts monétaires
                             showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
+                            break;
                         default:
                             break;
                     }
@@ -1601,15 +1648,17 @@
                     switch (tmp) {
                         case 1:
                             var new_id = 3;
-                            plot_c.destroy();
+                            showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                             break;
                         case 2:
                             var new_id = 1;
+                            // Bar chart des dégâts monétaires
                             showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
                             break;
                         case 3:
                             var new_id = 2;
-                            plot_c.destroy();
+                            showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
+                            break
                         default:
                             break;
                     }
