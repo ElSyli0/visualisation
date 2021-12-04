@@ -322,6 +322,28 @@
         return res;
     }
 
+    function getDeathForEvents(all_events, typeEvent){
+        var res = [0, 0, 0, 0];
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent){
+                var val = all_events[i].properties.damageDeath - 1;
+                res[val] = res[val] + 1;
+            }
+        }
+        return res;
+    }
+
+    function getHouseForEvents(all_events, typeEvent){
+        var res = [0, 0, 0, 0];
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent){
+                var val = all_events[i].properties.destroyedHouse - 1;
+                res[val] = res[val] + 1;
+            }
+        }
+        return res;
+    }
+
     /* ZONE POUR GRAPHIQUE */
     function plotBarChart(data, where, check, titre, labelX, labelY){
         var config = {
@@ -466,6 +488,82 @@
         plotBarChart(data, where, "C","Economic loss","Category","Occurrence");
     }
 
+    function showDeathDmg(all_events, where, eq, tsu, vol){
+      // Gestion des labels pour chaque classe
+      var labels = ["Few (~1 to 50 people)", "Some (~51 to 100 people)", "Many (~101 to 1000 people)", "Very Many (~1001 or more people)"];
+      // Gestion des données
+      var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                data: getDeathForEvents(all_events, "eq")
+            }
+            all_data.push(tmp)
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                data: getDeathForEvents(all_events, "tsu")
+            }
+            all_data.push(tmp)
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                data: getDeathForEvents(all_events, "vol")
+            }
+            all_data.push(tmp)
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        }
+        // Affichage
+        plotBarChart(data, where, "C","Loss of human life","Category","Occurrence");
+    }
+
+    function showHouseDst(all_events, where, eq, tsu, vol){
+      // Gestion des labels pour chaque classe
+      var labels = ["Few (~1 to 50 houses)", "Some (~51 to 100 houses)", "Many (~101 to 1000 houses)", "Very Many (~1001 or more houses)"];
+      // Gestion des données
+      var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                data: getHouseForEvents(all_events, "eq")
+            }
+            all_data.push(tmp)
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                data: getHouseForEvents(all_events, "tsu")
+            }
+            all_data.push(tmp)
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                data: getHouseForEvents(all_events, "vol")
+            }
+            all_data.push(tmp)
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        }
+        // Affichage
+        plotBarChart(data, where, "C","Destroyed house","Category","Occurrence");
+    }
+
     function showGravityEvents(all_events, where, eq, tsu, vol){
         // Gestion des labels
         var labels = ["Weak", "Strong", "Severe"];
@@ -544,7 +642,7 @@
         plotLineChart(data, where, "F","Evolution of the number of events over time","Years","Value");
     }
     /**********************************/
-    //
+    /*
     function drawBartChartForAmount(data, where, x_label, y_label){
         document.getElementById(where).innerHTML = "";
         // Dimensions du graphe
@@ -649,7 +747,8 @@
         var x_label = "Amount damages";
         drawBartChartForAmount(y, where, x_label, y_label);
     }
-
+    */
+   /**********************************/
 
     // Récupération de la date sous forme de array [b_inf, b_sup]
     function RecupDate() {
@@ -839,6 +938,9 @@
                                     intensity : DataJson[i].intensity,
                                     type: "eq",
                                     damageMoney: DataJson[i].damageAmountOrder,
+                                    damageDeath: DataJson[i].deathsAmountOrder,
+                                    //damageHouse: DataJson[i].housesDamagedAmountOrder,
+                                    destroyedHouse: DataJson[i].housesDestroyedAmountOrder,
                                     year: DataJson[i].year
                                 }
                 }
@@ -870,6 +972,9 @@
                                     intensity : DataJson[i].intensity,
                                     type: "tsu",
                                     damageMoney: DataJson[i].damageAmountOrder,
+                                    damageDeath: DataJson[i].deathsAmountOrder,
+                                    //damageHouse: DataJson[i].housesDamagedAmountOrder,
+                                    destroyedHouse: DataJson[i].housesDestroyedAmountOrder,
                                     year: DataJson[i].year
                                 }
                 }
@@ -917,7 +1022,10 @@
                                   intensity : DataJson[indJson].intensity,
                                   year : DataEvents[i].year,
                                   type: "vol",
-                                  damageMoney: DataEvents[i].damageAmountOrder
+                                  damageMoney: DataEvents[i].damageAmountOrder,
+                                  damageDeath: DataEvents[i].deathsAmountOrder
+                                  //damageHouse: DataJson[i].housesDamagedAmountOrder,
+                                  //destroyedHouse: DataEvents[i].housesDestroyedAmountOrder
                               }
               }
               if (DataEvents[i].comments){
@@ -1365,8 +1473,8 @@
                     // Affichage par défaut du graphique de conséquence
                     var id = $(".prev_csq").attr("id").replace("prev_csq_", "");
                     if(id == "1") showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
-                    //if(id == "2") //to do
-                    //if(id == "3") //to do
+                    if(id == "2") showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
+                    if(id == "3") showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                     // Affichage du graphique de faits par défaut
                     var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
                     if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
@@ -1452,8 +1560,8 @@
                     // Affichage par défaut du graphique de conséquence
                     var id = $(".prev_csq").attr("id").replace("prev_csq_", "");
                     if(id == "1") showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
-                    //if(id == "2") //to do
-                    //if(id == "3") //to do
+                    if(id == "2") showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
+                    if(id == "3") showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                     // Affichage du graphique de faits par défaut
                     var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
                     if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
@@ -1524,18 +1632,23 @@
                     var id = $(this).attr("id").replace("next_csq_", "");
                     var tmp = parseInt(id);
                     switch (tmp) {
-                        case 1:
-                            var new_id = 2;
-                            plot_c.destroy();
-                            break;
-                        case 2:
-                            var new_id = 3;
-                            plot_c.destroy();
-                            break;
+                      case 1:
+                          var new_id = 4;
+                          plot_f.destroy();
+                          break;
+                          case 2:
+                              var new_id = 1;
+                              // Bar chart des dégâts monétaires
+                              showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
+                              break;
                         case 3:
-                            var new_id = 1;
-                            // Bar chart des dégâts monétaires
-                            showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
+                            var new_id = 2;
+                              showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
+                              break;
+                       case 4:
+                                  var new_id = 3;
+                                    showHouseDst(all_events, "plot_csq", eq, tsu, vol);
+                                    break;
                         default:
                             break;
                     }
@@ -1552,16 +1665,22 @@
                     var tmp = parseInt(id);
                     switch (tmp) {
                         case 1:
-                            var new_id = 3;
+                            var new_id = 4;
                             plot_c.destroy();
                             break;
                         case 2:
                             var new_id = 1;
+                                // Bar chart des dégâts monétaires
                             showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
                             break;
-                        case 3:
-                            var new_id = 2;
-                            plot_c.destroy();
+                            case 3:
+                                var new_id = 2;
+                                  showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
+                                  break;
+                                  case 4:
+                                             var new_id = 3;
+                                               showHouseDst(all_events, "plot_csq", eq, tsu, vol);
+                                               break;
                         default:
                             break;
                     }
