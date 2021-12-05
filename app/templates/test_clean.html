@@ -31,6 +31,18 @@
     <!-- Code CSS personnalisé -->
     <style type="text/css">
         /* Style pour la légende */
+        .info {
+            padding: 6px 8px;
+            font: 14px/16px Arial, Helvetica, sans-serif;
+            background: white;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        .info h4 {
+            margin: 0 0 5px;
+            color: #777;
+        }
         .legend {
             line-height: 18px;
             background-color: white;
@@ -1042,7 +1054,19 @@
          return div;
          };
         // Legend pour expliquer la colormap
-        // TO DO...
+        let legend_label = L.control({position : 'topright'});
+        legend_label.onAdd = function(mymap) {
+            // vérification si élément déjà existant
+            var container = legend_label.getContainer();
+            if(container){
+                L.DomUtil.remove(container);
+            }
+            this._div = L.DomUtil.create('div', 'info');
+            return this._div;
+        }
+        legend_label.update = function(array_time){
+            this._div.innerHTML = "<h4>Number of disasters from "+String(array_time[0])+" to "+String(array_time[1])+"</h4>";
+        }
         
         // Récupération de toutes les data une seule fois
         d3.json("/getCountries", function(countries){
@@ -1113,6 +1137,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
+                    legend_label.remove();
                     legendCircle.remove();
                 }
                 else if(val == "C"){
@@ -1122,6 +1147,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
+                    legend_label.remove();
                     legendCircle.remove();
                 }
                 else if(val == "T"){
@@ -1130,6 +1156,7 @@
                     layerVolcano.clearLayers();
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
+                    legend_label.remove();
                     legendCircle.remove();
                 }
             })
@@ -1185,6 +1212,8 @@
                                 legendCircle.remove();
                                 legend.addTo(mymap);
                                 legend.update(bounds);
+                                legend_label.addTo(mymap);
+                                legend_label.update(array_time);
                             }
                         });
                     }
@@ -1211,7 +1240,8 @@
                                 legendCircle.remove();
                                 legend.addTo(mymap);
                                 legend.update(bounds);
-
+                                legend_label.addTo(mymap);
+                                legend_label.update(array_time);
                             }
                         });
                     }
@@ -1238,6 +1268,8 @@
                                 legendCircle.remove();
                                 legend.addTo(mymap);
                                 legend.update(bounds);
+                                legend_label.addTo(mymap);
+                                legend_label.update(array_time);
                             }
                         });
                     }
@@ -1269,18 +1301,21 @@
                         layer.addData(Data_countries);
                         layer.setStyle(style_polygons);
                         legend.remove();
+                        legend_label.remove();
                         legendCircle.addTo(mymap);
                     }
                     if(val == "C"){
                         layer.addData(Data_continents);
                         layer.setStyle(style_polygons);
                         legend.remove();
+                        legend_label.remove();
                         legendCircle.addTo(mymap);
                     }
                     if(val == "T"){
                         layer.addData(Data_tect);
                         layer.setStyle(style_polygons);
                         legend.remove();
+                        legend_label.remove();
                         legendCircle.addTo(mymap);
                     }
                     layerEarthquake.clearLayers();
