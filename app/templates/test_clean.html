@@ -198,6 +198,40 @@
         return res;
     }
 
+    function getDeathDmgPerYear(all_events, typeEvent, labels){
+        // Initialisation des nbrs d'événements par année
+        var res = Array();
+        for(let i=0; i<labels.length; i++){
+            res.push(0);
+        }
+        // Mise à jour
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent && all_events[i].properties.dmgDeath){
+                var year = all_events[i].properties.year;
+                var index = labels.indexOf(year);
+                res[index] = res[index] + all_events[i].properties.dmgDeath;
+            }
+        }
+        return res;
+    }
+
+    function getDstHousePerYear(all_events, typeEvent, labels){
+        // Initialisation des nbrs d'événements par année
+        var res = Array();
+        for(let i=0; i<labels.length; i++){
+            res.push(0);
+        }
+        // Mise à jour
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent && all_events[i].properties.dstHouse){
+                var year = all_events[i].properties.year;
+                var index = labels.indexOf(year);
+                res[index] = res[index] + all_events[i].properties.dstHouse;
+            }
+        }
+        return res;
+    }
+    
     function getMoneyForEvents(all_events, typeEvent){
         var res = [0, 0, 0, 0];
         for(let i=0; i<all_events.length; i++){
@@ -540,6 +574,86 @@
         plotLineChart(data, where, "F","Evolution of the number of events over time","Years","Value");
     }
 
+    function showDeathDmgEvolution(all_events, where, eq, tsu, vol, array_time){
+        // gestion des labels
+        labels = getLabelsForTime(array_time);
+        var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                borderColor: "orange",
+                data: getDeathDmgPerYear(all_events, "eq", labels)
+            }
+            all_data.push(tmp);
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                borderColor: "darkblue",
+                data: getDeathDmgPerYear(all_events, "tsu", labels)
+            }
+            all_data.push(tmp);
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                borderColor: "darkred",
+                data: getDeathDmgPerYear(all_events, "vol", labels)
+            }
+            all_data.push(tmp);
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        };
+        // Affichage
+        plotLineChart(data, where, "C","Evolution of the number of deaths over time","Years","Value");
+    }
+
+    function showDstHouseEvolution(all_events, where, eq, tsu, vol, array_time){
+        // gestion des labels
+        labels = getLabelsForTime(array_time);
+        var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                borderColor: "orange",
+                data: getDstHousePerYear(all_events, "eq", labels)
+            }
+            all_data.push(tmp);
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                borderColor: "darkblue",
+                data: getDstHousePerYear(all_events, "tsu", labels)
+            }
+            all_data.push(tmp);
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                borderColor: "darkred",
+                data: getDstHousePerYear(all_events, "vol", labels)
+            }
+            all_data.push(tmp);
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        };
+        // Affichage
+        plotLineChart(data, where, "C","Evolution of the total number of destroyed houses over time","Years","Value");
+    }
+    
     // Récupération de la date sous forme de array [b_inf, b_sup]
     function RecupDate() {
         // Récupération des bornes pour l'intervalle de temps
@@ -729,8 +843,9 @@
                                     type: "eq",
                                     damageMoney: DataJson[i].damageAmountOrder,
                                     damageDeath: DataJson[i].deathsAmountOrder,
-                                    //damageHouse: DataJson[i].housesDamagedAmountOrder,
+                                    dmgDeath: DataJson[i].deaths,
                                     destroyedHouse: DataJson[i].housesDestroyedAmountOrder,
+                                    dstHouse: DataJson[i].housesDestroyedTotal,
                                     year: DataJson[i].year
                                 }
                 }
@@ -763,8 +878,9 @@
                                     type: "tsu",
                                     damageMoney: DataJson[i].damageAmountOrder,
                                     damageDeath: DataJson[i].deathsAmountOrder,
-                                    //damageHouse: DataJson[i].housesDamagedAmountOrder,
+                                    dmgDeath: DataJson[i].deaths,
                                     destroyedHouse: DataJson[i].housesDestroyedAmountOrder,
+                                    dstHouse: DataJson[i].housesDestroyed,
                                     year: DataJson[i].year
                                 }
                 }
@@ -813,9 +929,10 @@
                                   year : DataEvents[i].year,
                                   type: "vol",
                                   damageMoney: DataEvents[i].damageAmountOrder,
-                                  damageDeath: DataEvents[i].deathsAmountOrder
-                                  //damageHouse: DataJson[i].housesDamagedAmountOrder,
-                                  //destroyedHouse: DataEvents[i].housesDestroyedAmountOrder
+                                  damageDeath: DataEvents[i].deathsAmountOrder,
+                                  dmgDeath: DataEvents[i].deaths,
+                                  destroyedHouse: DataEvents[i].housesDestroyedAmountOrder,
+                                  dstHouse: DataEvents[i].housesDestroyed
                               }
               }
               if (DataEvents[i].comments){
@@ -1278,6 +1395,8 @@
                     if(id == "1") showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
                     if(id == "2") showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
                     if(id == "3") showHouseDst(all_events, "plot_csq", eq, tsu, vol);
+                    if(id == "4") showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
+                    if(id == "5") showDstHouseEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
                     // Affichage du graphique de faits par défaut
                     var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
                     if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
@@ -1369,6 +1488,8 @@
                     if(id == "1") showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
                     if(id == "2") showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
                     if(id == "3") showHouseDst(all_events, "plot_csq", eq, tsu, vol);
+                    if(id == "4") showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
+                    if(id == "5") showDstHouseEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
                     // Affichage du graphique de faits par défaut
                     var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
                     if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
@@ -1443,8 +1564,16 @@
                             showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                             break;
                         case 3:
-                            var new_id = 1;
+                            var new_id = 4;
                             // Bar chart des dégâts monétaires
+                            showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
+                            break;
+                        case 4:
+                            var new_id = 5
+                            showDstHouseEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
+                            break;
+                        case 5:
+                            var new_id = 1;
                             showMoneyDmg(all_events, "plot_csq", eq, tsu, vol);
                             break;
                         default:
@@ -1463,8 +1592,8 @@
                     var tmp = parseInt(id);
                     switch (tmp) {
                         case 1:
-                            var new_id = 3;
-                            showHouseDst(all_events, "plot_csq", eq, tsu, vol);
+                            var new_id = 5;
+                            showDstHouseEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
                             break;
                         case 2:
                             var new_id = 1;
@@ -1475,6 +1604,12 @@
                             var new_id = 2;
                             showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
                             break
+                        case 4:
+                            var new_id = 3;
+                            showHouseDst(all_events, "plot_csq", eq, tsu, vol);
+                        case 5:
+                            var new_id = 4;
+                            showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
                         default:
                             break;
                     }
