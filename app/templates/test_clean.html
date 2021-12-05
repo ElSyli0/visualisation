@@ -75,16 +75,16 @@
         }
         #facts{
             position: relative;
-            right: -1100px;
+            right: -1050px;
             top: -1040px;
-            width: 750px;
+            width: 790px;
             height: 373px;
         }
         #csq{
             position: relative;
-            right: -1100px;
+            right: -1050px;
             top: -1000px;
-            width: 750px;
+            width: 790px;
             height: 373px;
         }
         #nav_btn_facts{
@@ -384,7 +384,7 @@
     // Transformer les features pour chaque events en données lisibles pour affichage graphique
     function showMoneyDmg(all_events, where, eq, tsu, vol){
         // Gestion des labels pour chaque classe
-        var labels = ["Limited (<$1 million)", "Moderate (~$1 to $5 million)", "Severe (~>$5 to $24 million)", "Extreme (~$25 million or more)"];
+        var labels = ["<$1 million", "~$1 to $5 million", "~>$5 to $24 million", "~$25 million or more"];
         // Gestion des données
         var all_data = Array();
         if(eq){
@@ -422,7 +422,7 @@
 
     function showDeathDmg(all_events, where, eq, tsu, vol){
       // Gestion des labels pour chaque classe
-      var labels = ["Few (~1 to 50 people)", "Some (~51 to 100 people)", "Many (~101 to 1000 people)", "Very Many (~1001 or more people)"];
+      var labels = ["~1 to 50 people", "~51 to 100 people", "~101 to 1000 people", "~1001 or more people)"];
       // Gestion des données
       var all_data = Array();
         if(eq){
@@ -460,7 +460,7 @@
 
     function showHouseDst(all_events, where, eq, tsu, vol){
       // Gestion des labels pour chaque classe
-      var labels = ["Few (~1 to 50 houses)", "Some (~51 to 100 houses)", "Many (~101 to 1000 houses)", "Very Many (~1001 or more houses)"];
+      var labels = ["~1 to 50 houses", "~51 to 100 houses", "~101 to 1000 houses", "~1001 or more houses"];
       // Gestion des données
       var all_data = Array();
         if(eq){
@@ -1603,10 +1603,11 @@
                         case 3:
                             var new_id = 2;
                             showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
-                            break
+                            break;
                         case 4:
                             var new_id = 3;
                             showHouseDst(all_events, "plot_csq", eq, tsu, vol);
+                            break;
                         case 5:
                             var new_id = 4;
                             showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
