@@ -221,6 +221,23 @@
         return res;
     }
 
+    function getDstHousePerYear(all_events, typeEvent, labels){
+        // Initialisation des nbrs d'événements par année
+        var res = Array();
+        for(let i=0; i<labels.length; i++){
+            res.push(0);
+        }
+        // Mise à jour
+        for(let i=0; i<all_events.length; i++){
+            if(all_events[i].properties.type == typeEvent && all_events[i].properties.dstHouse){
+                var year = all_events[i].properties.year;
+                var index = labels.indexOf(year);
+                res[index] = res[index] + all_events[i].properties.dstHouse;
+            }
+        }
+        return res;
+    }
+
     function getMoneyForEvents(all_events, typeEvent){
         var res = [0, 0, 0, 0];
         for(let i=0; i<all_events.length; i++){
@@ -643,6 +660,46 @@
         plotLineChart(data, where, "C","Evolution of the number of deaths over time","Years","Value");
     }
 
+    function showDstHouseEvolution(all_events, where, eq, tsu, vol, array_time){
+        // gestion des labels
+        labels = getLabelsForTime(array_time);
+        var all_data = Array();
+        if(eq){
+            var tmp = {
+                label: "Earthquakes",
+                backgroundColor: "orange",
+                borderColor: "orange",
+                data: getDstHousePerYear(all_events, "eq", labels)
+            }
+            all_data.push(tmp);
+        }
+        if(tsu){
+            var tmp = {
+                label: "Tsunamis",
+                backgroundColor: "darkblue",
+                borderColor: "darkblue",
+                data: getDstHousePerYear(all_events, "tsu", labels)
+            }
+            all_data.push(tmp);
+        }
+        if(vol){
+            var tmp = {
+                label: "Volcanos",
+                backgroundColor: "darkred",
+                borderColor: "darkred",
+                data: getDstHousePerYear(all_events, "vol", labels)
+            }
+            all_data.push(tmp);
+        }
+        // Structure finale des données
+        var data = {
+            labels: labels,
+            datasets: all_data
+        };
+        // Affichage
+        plotLineChart(data, where, "C","Evolution of the total number of destroyed houses over time","Years","Value");
+    }
+
     // Récupération de la date sous forme de array [b_inf, b_sup]
     function RecupDate() {
         // Récupération des bornes pour l'intervalle de temps
@@ -833,8 +890,8 @@
                                     damageMoney: DataJson[i].damageAmountOrder,
                                     damageDeath: DataJson[i].deathsAmountOrder,
                                     dmgDeath: DataJson[i].deaths,
-                                    //damageHouse: DataJson[i].housesDamagedAmountOrder,
                                     destroyedHouse: DataJson[i].housesDestroyedAmountOrder,
+                                    dstHouse: DataJson[i].housesDestroyedTotal,
                                     year: DataJson[i].year
                                 }
                 }
@@ -868,8 +925,8 @@
                                     damageMoney: DataJson[i].damageAmountOrder,
                                     damageDeath: DataJson[i].deathsAmountOrder,
                                     dmgDeath: DataJson[i].deaths,
-                                    //damageHouse: DataJson[i].housesDamagedAmountOrder,
                                     destroyedHouse: DataJson[i].housesDestroyedAmountOrder,
+                                    dstHouse: DataJson[i].housesDestroyedTotal,
                                     year: DataJson[i].year
                                 }
                 }
@@ -920,8 +977,8 @@
                                   damageMoney: DataEvents[i].damageAmountOrder,
                                   damageDeath: DataEvents[i].deathsAmountOrder,
                                   dmgDeath: DataEvents[i].deaths,
-                                  //damageHouse: DataJson[i].housesDamagedAmountOrder,
-                                  destroyedHouse: DataEvents[i].housesDestroyedAmountOrder
+                                  destroyedHouse: DataEvents[i].housesDestroyedAmountOrder,
+                                  dstHouse: DataEvents[i].housesDestroyedTotal
                               }
               }
               if (DataEvents[i].comments){
@@ -1365,8 +1422,8 @@
                     if(id == "2") showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
                     //if(id == "3") showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                     //if(id == "3") showEcoDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
-                    if(id == "3") showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
-
+                    //if(id == "3") showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
+                    if(id == "3") showDstHouseEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
                     // Affichage du graphique de faits par défaut
                     var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
                     if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
@@ -1456,7 +1513,8 @@
                     if(id == "2") showDeathDmg(all_events, "plot_csq", eq, tsu, vol);
                     //if(id == "3") showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                     //if(id == "3") showEcoDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
-                    if(id == "3") showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
+                    //if(id == "3") showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
+                    if(id == "3") showDstHouseEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
                     // Affichage du graphique de faits par défaut
                     var id = $(".prev_fact").attr("id").replace("prev_facts_", "");
                     if(id == "1") showGravityEvents(all_events, "plot_facts", eq, tsu, vol);
@@ -1528,9 +1586,10 @@
                             break;
                         case 2:
                             var new_id = 3;
-                            showHouseDst(all_events, "plot_csq", eq, tsu, vol);
+                            //showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                             // NE PAS UTILISER POUR LE MOMENT showEcoDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
                             //showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
+                            showDstHouseEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
                             break;
                         case 3:
                             var new_id = 1;
@@ -1554,9 +1613,10 @@
                     switch (tmp) {
                         case 1:
                             var new_id = 3;
-                            showHouseDst(all_events, "plot_csq", eq, tsu, vol);
+                            //showHouseDst(all_events, "plot_csq", eq, tsu, vol);
                             // NE PAS UTILISER showEcoDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time)
                             //showDeathDmgEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
+                            showDstHouseEvolution(all_events, "plot_csq", eq, tsu, vol, array_time);
                             break;
                         case 2:
                             var new_id = 1;
