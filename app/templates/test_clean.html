@@ -56,6 +56,46 @@
             margin-right: 8px;
             opacity: 0.5;
         }
+        .info2 {
+          padding: 6px 8px;
+          font: 14px/16px Arial, Helvetica, sans-serif;
+          background: white;
+          background: rgba(255,255,255,0.8);
+          box-shadow: 0 0 15px rgba(0,0,0,0.2);
+          border-radius: 5px;
+        }
+
+   .legend2 {
+     line-height: 50px;
+     background-color: white;
+     border-radius: 5px;
+     height:max-content;
+       }
+
+   .legend2 i {
+        width: 35px;
+        height: 40px;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.5;
+      }
+
+    .circle {
+      float: left;
+      border: 1px solid #222;
+      border-radius: 50%;
+    }
+
+    .legend2 .colorcircle {
+      border-radius: 50%;
+      width: 15px;
+      height: 15px;
+      margin-top: 0px;
+    }
+    .legend2 .circlepadding {
+      border-radius: 40%;
+      background: rgba(255, 255, 255, 0.85);
+    }
         /* Style pour la carte et ses éléments */
         #map {
 				width: 1000px;   /* Dimensions of the map element */
@@ -231,7 +271,7 @@
         }
         return res;
     }
-    
+
     function getMoneyForEvents(all_events, typeEvent){
         var res = [0, 0, 0, 0];
         for(let i=0; i<all_events.length; i++){
@@ -653,7 +693,7 @@
         // Affichage
         plotLineChart(data, where, "C","Evolution of the total number of destroyed houses over time","Years","Value");
     }
-    
+
     // Récupération de la date sous forme de array [b_inf, b_sup]
     function RecupDate() {
         // Récupération des bornes pour l'intervalle de temps
@@ -1152,21 +1192,21 @@
             }
         };
         //additional
-        var legendCircle = L.control({position: 'bottomright'});
-        legendCircle.onAdd = function (mymap) {
+        var legend2 = L.control({position: 'bottomright'});
+        legend2.onAdd = function (mymap) {
            var container = legend.getContainer();
            if(container){
                L.DomUtil.remove(container);
            }
-           var div = L.DomUtil.create('div', 'info legend');
+           var div = L.DomUtil.create('div', 'info2 legend2');
            grades = [12, 25, 35],
            labels = ['Gravity of event'],
            categories = ['Weak','Strong','Severe'];
            for (var i = 0; i < grades.length; i++) {
                 var grade = grades[i];//*0.5;
-           labels.push(
-                '<i class="circlepadding" style="width: '+Math.max(8,(7-2.2*getRadius(grade)))+'px;"></i> <i style="background: #8080A0; width: '+getRadius(grade)*2+'px; height: '+getRadius(grade)*2+'px; border-radius: 50%; margin-top: '+Math.max(0,(9-getRadius(grade)))+'px;"></i><i class="circlepadding" style="width: '+Math.max(2,(25-2*getRadius(grade)))+'px;"></i> ' + categories[i]);
-           }
+                labels.push(
+                  '<i class="circlepadding" style="width: 7px;"></i> <i  style="background: #8080A0; width: '+getRadius(grade)*2+'px; height: '+getRadius(grade)*2+'px; border-radius:  50%; margin-top: '+Math.max(0,(9-getRadius(grade)))+'px;"></i> '+categories[i]);
+                }
          div.innerHTML = labels.join('<br>');
          return div;
          };
@@ -1184,7 +1224,7 @@
         legend_label.update = function(array_time){
             this._div.innerHTML = "<h4>Number of disasters from "+String(array_time[0])+" to "+String(array_time[1])+"</h4>";
         }
-        
+
         // Récupération de toutes les data une seule fois
         d3.json("/getCountries", function(countries){
         d3.json("/getContinents", function(continents){
@@ -1215,7 +1255,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
-                    legendCircle.remove();
+                    legend2.remove();
                 }
                 else if(val == "C"){
                     layerTsunami.clearLayers();
@@ -1226,7 +1266,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
-                    legendCircle.remove();
+                    legend2.remove();
                 }
                 else if(val == "T"){
                     layerTsunami.clearLayers();
@@ -1237,7 +1277,7 @@
                     layer.setStyle(style_polygons);
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
-                    legendCircle.remove();
+                    legend2.remove();
                 }
             };
             // Retour à la vision global
@@ -1255,7 +1295,7 @@
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
                     legend_label.remove();
-                    legendCircle.remove();
+                    legend2.remove();
                 }
                 else if(val == "C"){
                     layerTsunami.clearLayers();
@@ -1265,7 +1305,7 @@
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
                     legend_label.remove();
-                    legendCircle.remove();
+                    legend2.remove();
                 }
                 else if(val == "T"){
                     layerTsunami.clearLayers();
@@ -1274,7 +1314,7 @@
                     mymap.setView(AutoCenter, AutoZoom);
                     legend.remove();
                     legend_label.remove();
-                    legendCircle.remove();
+                    legend2.remove();
                 }
             })
 
@@ -1326,7 +1366,7 @@
                                     l.setStyle(newStyle(l.feature, bounds));
                                 });
                                 // légende
-                                legendCircle.remove();
+                                legend2.remove();
                                 legend.addTo(mymap);
                                 legend.update(bounds);
                                 legend_label.addTo(mymap);
@@ -1354,7 +1394,7 @@
                                     l.setStyle(newStyle(l.feature, bounds));
                                 });
                                 // légende
-                                legendCircle.remove();
+                                legend2.remove();
                                 legend.addTo(mymap);
                                 legend.update(bounds);
                                 legend_label.addTo(mymap);
@@ -1382,7 +1422,7 @@
                                     l.setStyle(newStyle(l.feature, bounds));
                                 });
                                 // légende
-                                legendCircle.remove();
+                                legend2.remove();
                                 legend.addTo(mymap);
                                 legend.update(bounds);
                                 legend_label.addTo(mymap);
@@ -1421,21 +1461,21 @@
                         layer.setStyle(style_polygons);
                         legend.remove();
                         legend_label.remove();
-                        legendCircle.addTo(mymap);
+                        legend2.addTo(mymap);
                     }
                     if(val == "C"){
                         layer.addData(Data_continents);
                         layer.setStyle(style_polygons);
                         legend.remove();
                         legend_label.remove();
-                        legendCircle.addTo(mymap);
+                        legend2.addTo(mymap);
                     }
                     if(val == "T"){
                         layer.addData(Data_tect);
                         layer.setStyle(style_polygons);
                         legend.remove();
                         legend_label.remove();
-                        legendCircle.addTo(mymap);
+                        legend2.addTo(mymap);
                     }
                     layerEarthquake.clearLayers();
                     layerTsunami.clearLayers();
