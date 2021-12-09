@@ -1,0 +1,112 @@
+/* Style pour la légende */
+.info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+.legend {
+    line-height: 18px;
+    background-color: white;
+    border-radius: 5px;
+    height:max-content;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.5;
+}
+.info2 {
+  padding: 6px 8px;
+  font: 14px/16px Arial, Helvetica, sans-serif;
+  background: white;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  border-radius: 5px;
+}
+
+.legend2 {
+line-height: 50px;
+background-color: white;
+border-radius: 5px;
+height:max-content;
+}
+
+.legend2 i {
+width: 35px;
+height: 40px;
+float: left;
+margin-right: 8px;
+opacity: 0.5;
+}
+
+.circle {
+float: left;
+border: 1px solid #222;
+border-radius: 50%;
+}
+
+.legend2 .colorcircle {
+border-radius: 50%;
+width: 15px;
+height: 15px;
+margin-top: 0px;
+}
+.legend2 .circlepadding {
+border-radius: 40%;
+background: rgba(255, 255, 255, 0.85);
+}
+/* Style pour la carte et ses éléments */
+#map {
+        width: 1000px;   /* Dimensions of the map element */
+        height: 600px;
+    }
+
+/* Style pour les différents div */
+#choice_sep{
+    position: relative;
+    right: -460px;
+    top: -104px;
+}
+#choice_events{
+    position: relative;
+    right: -730px;
+    top: -227px;
+}
+#facts{
+    position: relative;
+    right: -1050px;
+    top: -1040px;
+    width: 790px;
+    height: 365px;
+}
+#csq{
+    position: relative;
+    right: -1050px;
+    top: -1000px;
+    width: 790px;
+    height: 365px;
+}
+#nav_btn_facts{
+    position: relative;
+    visibility: hidden;
+}
+#nav_btn_csq{
+    position: relative;
+    visibility: hidden;
+}
+/* Styles généraux */
+body{
+    overflow: hidden;
+}
+h1{
+    font-family: Microsoft YaHei, CSS Fonts List;
+}

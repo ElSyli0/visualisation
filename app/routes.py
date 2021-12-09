@@ -1,15 +1,7 @@
-from app import app #, db
-from flask import render_template, redirect, url_for, flash, request
-from flask import jsonify
+from app import app
+from flask import render_template, request
 from flask import json, Response
 import os
-from app.forms import*
-from app.models import*
-from werkzeug.urls import url_parse
-from sqlalchemy.exc import DatabaseError
-#from flask_login import login_required, login_user, logout_user, current_user, LoginManager
-import datetime
-from sqlalchemy import exc
 import jenkspy
 
 
@@ -17,9 +9,7 @@ import jenkspy
 # Page de garde
 @app.route("/")
 def home():
-    #return render_template("test.html")
-    return render_template("test_clean.html")
-    #return render_template("view.html")
+    return render_template("view.html")
 
 @app.route("/getVolcanoEvents")
 def getVolcanoEvents():

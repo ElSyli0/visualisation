@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INFOVIS</title>
     <!-- Import des sources JS -->
     <script src="https://d3js.org/d3.v3.min.js"></script>
@@ -11,6 +13,10 @@
    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
    crossorigin=""></script>
     <script src="/static/js/leaflet.awesome-markers.js"></script>
+    <script src="/static/dist/leaflet.markercluster-src.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <!-- JS pour graphiques -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Import des stylesheets -->
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet'></link>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -18,847 +24,74 @@
     crossorigin=""/>
     <link rel="stylesheet" href="http://code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css">
     <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <!--link rel="stylesheet" href="/static/css/style.css"-->
     <link rel="stylesheet" href="/static/css/leaflet.awesome-markers.css"></link>
-    <link rel "stylesheet" href="/static/dist/MarkerCluster.css"><</link>
-    <link rel "stylesheet" href="/static/dist/MarkerCluster.Default.css"></link>
-    <script src="static/dist/leaflet.markercluster-src.js"></script>
+    <link rel="stylesheet" href="/static/dist/MarkerCluster.css"></link>
+    <link rel="stylesheet" href="/static/dist/MarkerCluster.Default.css"></link>
     <!-- Code CSS personnalisé -->
-    <style type="text/css">
-        /* BAR CHART */
-        /*
-        .bar {
-            fill: steelblue;
-        }
-        .axis text {
-            font: 10px sans-serif;
-        }
-        .axis path {
-            fill: none;
-            stroke: #000000;
-        }
-        #plot_facts {
-            width: 700px;
-            height: 500px;
-        }
-        button.next_fact, button.prev_fact, button.next_csq, button.prev_csq {
-            border-radius: 5px;
-            color: white;
-            background-color: navy;
-            font-family: arial, sans-serif;
-            height: 30px;
-            text-decoration: none;
-            width: 70px;
-            display: block;
-        }
-        button.next_fact:hover, button.prev_fact:hover, button.next_csq:hover, button.prev_csq:hover{
-            background-color: blue;
-        }
-        */
-        #map {
-				width: 1000px;   /* Dimensions of the map element */
-				height: 600px;
-			}
-
-		/* CSS code for the elements that have the class dot */
-        .beautiful_button {
-				background-color: steelblue;   /* The buttons are colored in steelblue */
-				border: none;   /* The buttons have no border */
-				color: white;   /* The text inside the buttons is white */
-				padding: 15px 32px;   /* Defines the space in pixels between the text inside the buttons and their edges */
-				text-align: center;   /* The text inside the buttons is centered */
-				font-size: 16px;   /* Font size of the text inside the buttons */
-			}
-			.Event_button {
-				background-color: steelblue;   /* The buttons are colored in steelblue */
-				border: none;   /* The buttons have no border */
-				color: white;   /* The text inside the buttons is white */
-				padding: 15px 32px;   /* Defines the space in pixels between the text inside the buttons and their edges */
-				text-align: center;   /* The text inside the buttons is centered */
-				font-size: 16px;   /* Font size of the text inside the buttons */
-			}
-			#buttons_container{
-				width: 1000px;   /* Dimensions of the buttons_container element */
-				text-align: center;   /* Centers the contents of the buttons_container element */
-			}
-			#checkboxesContainer{
-				width : 1000px;
-				text-align: center;
-			}
-
-    </style>
+    <link rel="stylesheet" href="/static/css/master.css"></link>
+    <!-- Code JS pour la carte-->
+    <script src="/static/js/script.js"></script>
 </head>
 <body>
     <ion-icon name="earth"></ion-icon>
 
-    <!-- Script JS pour plot un bart chart + gestion du déplacement dans les graphiques -->
-    <script type="text/javascript">
-        //
-        function countInstance(val, x){
-            count = 0;
-            for (let i = 0; i < x.length; i++) {
-                if(x[i] == val) count ++;
-            }
-            return count;
-        }
-        //
-        function drawBartChart(data){
-            document.getElementById("plot_facts").innerHTML = "";
-            // Dimensions du graphe
-            let margin = {top: 20, right: 20, bottom: 70, left: 60};
-            let width = document.getElementById("plot_facts").getBoundingClientRect().width - margin.left - margin.right;
-		    let height = document.getElementById("plot_facts").getBoundingClientRect().height - margin.top - margin.bottom;
-            // Echelles
-            let x = d3.scale.ordinal()
-			    .rangeBands([0, width], .1);
-            x.domain(data.map(function(d){
-                return d.intensity;
-            }));
-            let y = d3.scale.linear()
-			    .range([height, 0]);
-            y.domain([0, d3.max(data, function(d){
-			    return d.nbr;
-		    })]);
-            // Axes
-            let xAxis = d3.svg.axis()
-                .scale(x)
-                .orient("bottom");
-            let yAxis = d3.svg.axis()
-                .scale(y)
-                .orient("left")
-            // Éléments visuels
-            let chart = d3.select("#plot_facts")
-                .append("g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-            chart.append("g")
-                .attr("class", "x axis")   // The classes x and axis are assigned to the g element. Thus, the g element has the styles defined for x and axis classes in the CSS code
-                .attr("transform", "translate(0," + height + ")")   // The origin of the bar chart is at the bottom left, but the origin of a SVG element is its top left corner. Thus, the x axis needs to be moved down by height pixels in order to appear at the bottom of the chart
-                .call(xAxis)   // Define that it is the x axis in the g element
-                .selectAll("text")   // A selection is made to gather all the text elements in the x axis (that is, the ticks labels)
-                    .style("text-anchor", "middle")   // The text elements are attached at the middle of their tick
-                    .attr("dy", "0.5em");
-            chart.append("g")
-                .attr("class", "y axis")   // The classes y and axis are assigned to the g element. Thus, the g element has the styles defined for y and axis classes in the CSS code
-                .call(yAxis);
-            chart.selectAll(".bar")
-                .data(data)   // The dataset data is assigned. Elements with the class bar will be created accordingly
-                .enter().append("rect")   // .enter() defines new data elements for which a visual element counterpart (in the present case, a rectangle) needs to be created. The code after .enter() will be executed on each of these visual elements (hence, once per entry in the dataset)
-                    .attr("class", "bar")   // The rectangles have the class bar
-                    .attr("x", function(d){   // The x position of the rectangle is determined by the agent to which the rectangle corresponds
-                        return x(d.intensity);
-                    })
-                    .attr("y", function(d){
-                        return y(d.nbr);   // By default, the bars are aligned to the top of the chart (remember, the origin of a SVG element is at its top left corner). y(d.sales) is the size of the gap between the bar aligned to the top and the x axis
-                    })
-                    .attr("height", function(d){   // The height of each rectangle is computed accordingly to the sales
-                        return height - y(d.nbr);
-                    })
-                    .attr("width", x.rangeBand())   // The width of a bar depends on the space allocated to the bars on the x axis
-            // Ajout des labels
-            chart.append("text")
-                .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top + 30) + ")")   // The label is translated rightwards by half the width of the chart (thus, it will appear at the middle)
-                .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
-                .text("intensity");   // Label
-            chart.append("text")
-                .attr("transform", "rotate(-90)")   // The label is rotated by -90 degrees in order to be written along the y axis
-                .attr("y", 0 - margin.left)   // The element was rotated by -90 degrees -> attention to the coordinates to translate
-                .attr("x", 0 - (height / 2))
-                .attr("dy", "1em")
-                .style("text-anchor", "middle")   // The label is at the middle (without this line, it would be the origin of the text element that would be at the middle of the chart. The label would not be exactly centered)
-                .text("occurences");   // Label
-
-        }
-
-        // function to draw plot about the earthquake
-        function plotEvolutionFrequencyForEarthquakes(){
-            d3.json("/getEarthquake", function(data){
-                // création d'un array pour conserver toutes les intensités rencontrées
-                var x = [];
-                for (let i = 0; i < data.length; i++) {
-                    const element = data[i];
-                    var tmp = element.intensity;
-                    if(tmp){
-                        x.push(tmp);
-                    }
-                }
-                // création d'un objet "data" pour l'affichage d'un bart chart
-                var max_x = d3.max(x);
-                var min_x = d3.min(x);
-                var y = [];
-                for (let i = min_x; i <= max_x; i++) {
-                    var tmp = {};
-                    tmp["intensity"] = i;
-                    tmp["nbr"] = countInstance(i, x)
-                    y.push(tmp);
-                }
-                // Construction du graphique
-                drawBartChart(y)
-            });
-
-            /* VERSION 7 de D3.js
-            d3.json("/getEarthquake")
-                .then(function(data){
-                    var x = [];
-                    for (let i = 0; i < data.length; i++) {
-                        const element = data[i];
-                        var tmp = element.intensity;
-                        if(tmp){
-                            x.push(tmp);
-                        }
-                    }
-                    // Histogram
-                    var max_x = d3.max(x);
-                    var min_x = d3.min(x);
-                    var y = [];
-                    for (let i = min_x; i <= max_x; i++) {
-                        var tmp = {};
-                        tmp["intensity"] = i;
-                        tmp["nbr"] = countInstance(i, x)
-                        y.push(tmp);
-                    }
-                    drawBartChart(y);
-                });
-                */
-        }
-
-
-        // Tout ce qui sera dans cette fonction sera possible une fois que la page sera chargée
-        $(document).ready(function(){
-            plotEvolutionFrequencyForEarthquakes();
-            // Gestion de l'affichage des graphiques en fonction de la flèche sélectionnée
-            $("button.next_fact").click(function(){
-                var id = $(this).attr("id").replace("next_facts_", "");
-                var tmp = parseInt(id);
-                switch (tmp) {
-                    case 1:
-                        alert("Affichage graph de type 2");
-                        var new_id = 2;
-                        break;
-                    case 2:
-                        alert("Affichage graph de type 3");
-                        var new_id = 3;
-                        break;
-                    case 3:
-                        alert("Affichage graph de type 1");
-                        var new_id = 1;
-                    default:
-                        break;
-                }
-                var txt = "next_facts_"+String(new_id);
-                $(this).attr("id", txt);
-                txt = "prev_facts_"+String(new_id);
-                $("#prev_facts_"+tmp).attr("id", txt);
-            });
-            $("button.prev_fact").click(function(){
-                var id = $(this).attr("id").replace("prev_facts_", "");
-                var tmp = parseInt(id);
-                switch (tmp) {
-                    case 1:
-                        alert("Affichage graph de type 3");
-                        var new_id = 3;
-                        break;
-                    case 2:
-                        alert("Affichage graph de type 1");
-                        var new_id = 1;
-                        break;
-                    case 3:
-                        alert("Affichage graph de type 2");
-                        var new_id = 2;
-                    default:
-                        break;
-                }
-                var txt = "prev_facts_"+String(new_id);
-                $(this).attr("id", txt);
-                txt = "next_facts_"+String(new_id);
-                $("#next_facts_"+tmp).attr("id", txt);
-            });
-            $("button.next_csq").click(function(){
-                var id = $(this).attr("id").replace("next_csq_", "");
-                var tmp = parseInt(id);
-                switch (tmp) {
-                    case 1:
-                        alert("Affichage graph de type 2");
-                        var new_id = 2;
-                        break;
-                    case 2:
-                        alert("Affichage graph de type 3");
-                        var new_id = 3;
-                        break;
-                    case 3:
-                        alert("Affichage graph de type 1");
-                        var new_id = 1;
-                    default:
-                        break;
-                }
-                var txt = "next_csq_"+String(new_id);
-                $(this).attr("id", txt);
-                txt = "prev_csq_"+String(new_id);
-                $("#prev_csq_"+tmp).attr("id", txt);
-            });
-            $("button.prev_csq").click(function(){
-                var id = $(this).attr("id").replace("prev_csq_", "");
-                var tmp = parseInt(id);
-                switch (tmp) {
-                    case 1:
-                        alert("Affichage graph de type 3");
-                        var new_id = 3;
-                        break;
-                    case 2:
-                        alert("Affichage graph de type 1");
-                        var new_id = 1;
-                        break;
-                    case 3:
-                        alert("Affichage graph de type 2");
-                        var new_id = 2;
-                    default:
-                        break;
-                }
-                var txt = "prev_csq_"+String(new_id);
-                $(this).attr("id", txt);
-                txt = "next_csq_"+String(new_id);
-                $("#next_csq_"+tmp).attr("id", txt);
-            });
-            // Quoi faire quand le bouton #event_btn est cliqué
-            $("#event_btn").click(function(){
-                // Récupération des valeurs dans les différents inputs
-                if($("#eq_event").is(":checked")) var eq = true;
-                else var eq = false;
-                if($("#eq_tsu").is(":checked")) var tsu = true;
-                else var tsu = false;
-                if($("#eq_event").is(":checked")) var vol = true;
-                else var vol = false;
-                // Choses à faire avec les infos...
-            });
-            // Quoi faire quand le bouton #sep_btn est cliqué
-            $("#sep_btn").click(function(){
-                var val = $("#select_sep").val();
-                // Choses à faire avec les infos...
-            });
-        });
-    </script>
-
-    <h1>Où (ne pas) aller dans le monde ?</h1>
+    <h1>Where (not) to go in the world ?</h1>
 
     <!-- div pour affichage de la carte-->
     <div id="map"></div>
-    <h3>Limite inf date</h3>
-    <input type="number" id="DateInf" value="-500">
-    <input type="number" id="DateSup" value="2022">
-    <button id="Date_ok" onclick="RecupDate()">Date ok</button>
+
+    <!-- div pour le choix des dates -->
+    <div id="choice_date">
+        <h2>Choice for time range (lower/upper bound)</h2>
+        <input type="number" id="DateInf" value="-500">
+        <input type="number" id="DateSup" value="2021"><br><br>
+    </div>
+
     <!-- div pour choix des séparations (Pays/Plaques/Continents) -->
     <div id="choice_sep">
-        <h2>Choix des délimitations</h2>
-        <label for="select_sep">Continents :</label>
+        <h2>Which delimitations ?</h2>
         <select name="select_sep" id="select_sep">
+            <option value="P">Countries</option>
+            <option value="T">Tectonic plates</option>
             <option value="C">Continents</option>
-            <option value="P">Pays</option>
-            <option value="T">Plaques tectoniques</option>
         </select><br><br>
 
-        <button id="sep_btn">Validation</button><br>
-        <button id="ClearDelim">Clear</button>
+        <button id="resetZoom">global view</button>
     </div>
 
     <!-- div pour choix des events-->
     <div id="choice_events">
-        <h2>Choix des événements</h2>
-        <label for="eq_event">Tremblement de terre :</label>
+        <h2>Which disaster ?</h2>
+        <label for="eq_event">Earthquakes :</label>
         <input type="checkbox" name="eq_event" id="eq_event"><br>
 
-        <label for="tsu_event">Tsunami :</label>
+        <label for="tsu_event">Tsunamis :</label>
         <input type="checkbox" name="tsu_event" id="tsu_event"><br>
 
-        <label for="vol_event">Éruption : </label>
+        <label for="vol_event">Volcanos : </label>
         <input type="checkbox" name="vol_event" id="vol_event"><br><br>
 
-        <button id="event_btn">Validation</button><br>
-        <button id="ClearEvents">Clear_events</button>
+        <button id="event_btn">Validation</button>
     </div>
 
     <!-- div pour affichage des graphiques sur les faits -->
-    <div class="facts">
-        <svg id="plot_facts"></svg>
-        <div class="nav_btn">
+    <div id="facts">
+        <canvas id="plot_facts"></canvas>
+        <div id="nav_btn_facts">
             <button class="prev_fact" id="prev_facts_1">&larr;</button>
             <button class="next_fact" id="next_facts_1">&rarr;</button>
         </div>
     </div>
 
     <!-- div pour affichage des graphique sur les conséquences -->
-    <div class="csq">
-        <svg id="plot_csq"></svg>
-        <div class="nav_btn">
+    <div id="csq">
+        <canvas id="plot_csq"></canvas>
+        <div id="nav_btn_csq">
             <button class="prev_csq" id="prev_csq_1">&larr;</button>
             <button class="next_csq" id="next_csq_1">&rarr;</button>
         </div>
     </div>
+
 </body>
 </html>
-<script>
-function RecupDate() {
-  var res = Array();
-  var x = document.getElementById("DateInf").value;
-  res.push(x);
-  x = document.getElementById("DateSup").value;
-  res.push(x);
-  return res
-}
-</script>
-<script type="text/javascript">
-    let AutoZoom =2;
-    let AutoCenter =[30,0];
-    var mymap = L.map('map', { zoomControl: false }).setView(AutoCenter, AutoZoom);
-    mymap.doubleClickZoom.disable();
-    mymap.scrollWheelZoom.disable();
-    mymap.boxZoom.disable();
-    mymap.keyboard.disable();
-    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        maxZoom: 18,
-        id: 'mapbox/light-v10',
-        tileSize: 512,
-        zoomOffset: -1,
-        accessToken: 'sk.eyJ1IjoiY2hpZWZkdXBhbiIsImEiOiJja3Z3cDg5dGMxbmpkMnZtOW42aHQ4N3FqIn0.9bgkgEMeGUihgjpmoDDhVQ'
-    }).addTo(mymap);
-    function Polygon_cleanCountries(Data){
-        let features=Array();
-        for (let i=0;i<Data.features.length;i++){
-            if (Data.features[i].geometry.type=="MultiPolygon"){
-                for (let j=0;j<Data.features[i].geometry.coordinates.length;j++){
-                    let point={type:"Feature",
-                                        geometry :{
-                                            type: "Polygon",
-                                            coordinates :Data.features[i].geometry.coordinates[j]
-                                        },
-                                        properties : {
-                                                name : Data.features[i].properties.name
-                                        }
-                    }
-                    features.push(point);
-                }
-            } else if(Data.features[i].geometry.type=="Polygon"){
-                let point={type:"Feature",
-                                    geometry :{
-                                        type: "Polygon",
-                                        coordinates :Data.features[i].geometry.coordinates
-                                    },
-                                    properties : {
-                                        name : Data.features[i].properties.name
-                                    }
-                }
-                features.push(point);
-            } else {
-                console.log(i);
-                console.log(Data.features[i]);
-            }
-        }
-        return features
-    }
-    function Polygon_cleanContinent(Data){
-        let features=Array();
-        for (let i=0;i<Data.features.length;i++){
-            if (Data.features[i].geometry.type=="MultiPolygon"){
-                for (let j=0;j<Data.features[i].geometry.coordinates.length;j++){
-                    let point={type:"Feature",
-                                        geometry :{
-                                            type: "Polygon",
-                                            coordinates :Data.features[i].geometry.coordinates[j]
-                                        },
-                                        properties : {
-                                                name : Data.features[i].properties.continent
-                                        }
-                    }
-                    features.push(point);
-                }
-            } else if(Data.features[i].geometry.type=="Polygon"){
-                let point={type:"Feature",
-                                    geometry :{
-                                        type: "Polygon",
-                                        coordinates :Data.features[i].geometry.coordinates
-                                    },
-                                    properties : {
-                                        name : Data.features[i].properties.continent
-                                    }
-                }
-                features.push(point);
-            } else {
-                console.log(i);
-                console.log(Data.features[i]);
-            }
-        }
-        return features
-    }
-    function Polygon_cleanTect(Data){
-        let features=Array();
-        for (let i=0;i<Data.features.length;i++){
-            if (Data.features[i].geometry.type=="MultiPolygon"){
-                for (let j=0;j<Data.features[i].geometry.coordinates.length;j++){
-                    let point={type:"Feature",
-                                        geometry :{
-                                            type: "Polygon",
-                                            coordinates :Data.features[i].geometry.coordinates[j]
-                                        },
-                                        properties : {
-                                                name : Data.features[i].properties.PlateName
-                                        }
-                    }
-                    features.push(point);
-                }
-            } else if(Data.features[i].geometry.type=="Polygon"){
-                let point={type:"Feature",
-                                    geometry :{
-                                        type: "Polygon",
-                                        coordinates :Data.features[i].geometry.coordinates
-                                    },
-                                    properties : {
-                                        name : Data.features[i].properties.PlateName
-                                    }
-                }
-                features.push(point);
-            } else {
-                console.log(i);
-                console.log(Data.features[i]);
-            }
-        }
-        return features
-    }
-    function getGeoJSON_E(DataJson){
-        let features =Array();
-        for (let i=0;i<DataJson.length;i++){
-            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].intensity >3 && DataJson[i].latitude > -70 && DataJson[i].latitude < 80) {
-                let point={type:"Feature",
-                                geometry : {
-                                    type: "Point",
-                                    coordinates : [DataJson[i].longitude, DataJson[i].latitude]
-                                },
-                                properties : {
-                                    id : DataJson[i].id,
-                                    intensity : DataJson[i].intensity,
-                                }
-                }
-                if (DataJson[i].comments) {
-                  point.properties.comments = DataJson[i].comments
-                } else {
-                  point.properties.comments ="Nothing to say, glhf"
-                }
-                if (DataJson[i].year){
-                  point.properties.year=DataJson[i].year
-                  if (DataJson[i].intensity>12){
-                    continue;
-                  }else {
-                    if (DataJson[i].intensity>3 && DataJson[i].intensity<7){
-                      point.properties.gravity=1;
-                    } else if(DataJson[i].intensity>6 && DataJson[i].intensity<10){
-                      point.properties.gravity=2;
-                    } else if (DataJson[i].intensity>9 && DataJson[i].intensity<13){
-                      point.properties.gravity=3;
-                    }
-                    features.push(point);
-                  }
-                }
-            }
-        }
-        return features
-    }
-    function getGeoJSON_T(DataJson){
-        let features =Array();
-        for (let i=0;i<DataJson.length;i++){
-            if (DataJson[i].longitude && DataJson[i].latitude && DataJson[i].eventValidity >= 3  && DataJson[i].latitude > -70 && DataJson[i].latitude < 80 && DataJson[i].maxWaterHeight) {
-                let point={type:"Feature",
-                                geometry : {
-                                    type: "Point",
-                                    coordinates : [DataJson[i].longitude, DataJson[i].latitude]
-                                },
-                                properties : {
-                                    id : DataJson[i].id,
-                                    intensity : DataJson[i].intensity,
-                                }
-                }
-                if (DataJson[i].comments) {
-                  point.properties.comments = DataJson[i].comments
-                } else {
-                  point.properties.comments ="Nothing to say, glhf"
-                }
-                if (DataJson[i].year){
-                  if (DataJson[i].maxWaterHeight>200){
-                    console.log(DataJson[i])
-                    continue;
-                  } else {
-                    if (DataJson[i].maxWaterHeight>=0 && DataJson[i].maxWaterHeight<=3){
-                      point.properties.gravity=1;
-                    } else if(DataJson[i].maxWaterHeight>3 && DataJson[i].maxWaterHeight<=9){
-                      point.properties.gravity=2;
-                    } else if(DataJson[i].maxWaterHeight>9 && DataJson[i].maxWaterHeight<200){
-                      point.properties.gravity=3;
-                    }
-                    point.properties.year=DataJson[i].year
-                    features.push(point);
-                  }
-
-                }
-            }
-        }
-        return features
-    }
-    function getGeoJSON_V(DataJson,DataEvents){
-        let features =Array();
-        var cnt=0;
-        var point;
-        var indJson=0
-        var j=0
-        for (let i=0;i<DataEvents.length;i++){
-
-          for (j=0;j<DataJson.length;j++){
-            if (DataJson[j].id ==DataEvents[i].volcanoLocationId){
-              indJson=j
-              break;
-            }
-            if(j==DataJson.length-1){
-              indJson=-1;
-              cnt++;
-            }
-          }
-          if (indJson!=-1){
-            if (DataJson[indJson].longitude && DataJson[indJson].latitude && DataJson[indJson].latitude > -70 && DataJson[indJson].latitude < 80 && DataEvents[i].year && DataEvents[i].vei) {
-              point={type:"Feature",
-                              geometry : {
-                                  type: "Point",
-                                  coordinates : [DataJson[indJson].longitude, DataJson[indJson].latitude]
-                              },
-                              properties : {
-                                  id : DataJson[indJson].id,
-                                  intensity : DataJson[indJson].intensity,
-                                  year : DataEvents[i].year,
-                                  type : "vol",
-                                  damage: DataJson[i].damageAmountOrder
-                              }
-              }
-              if (DataEvents[i].comments){
-                point.properties.comments = DataEvents[i].comments
-              } else {
-                point.properties.comments = "Nothing to say, glhf"
-              }
-              if (DataEvents[i].vei<3 && DataEvents[i].vei>0){
-                point.properties.gravity=1;
-              } else if(DataEvents[i].vei<5 && DataEvents[i].vei>2){
-                point.properties.gravity=2;
-              } else if(DataEvents[i].vei>4 && DataEvents[i].vei<13){
-                point.properties.gravity=3;
-              } else {
-                console.log(DataEvents[i]);
-              }
-              features.push(point)
-            }
-        }
-    }
-    return features
-  }
-    function DataTimed(Data,Time){
-      let retour=Array();
-      for (let i=0;i<Data.features.length;i++){
-        if (Data.features[i].properties.year > Time[0] && Data.features[i].properties.year < Time[1]){
-          retour.push(Data.features[i]);
-        }
-      }
-      let tmp={type :"FeatureCollection", features :retour};
-      return tmp
-    }
-        d3.json("/getContinents", function(continents){   // The code in the function is executed only when the data is loaded. All code requiring that the data is fully loaded shoud come here
-        d3.json("/getCountries",function(countries){
-        d3.json("/getTect",function(tect){
-        d3.json("/getEarthquake",function(Da_ear){
-        d3.json("/getTsu",function(Da_tsu){
-        d3.json("/getVolcanoLoc",function(Da_vol){
-        d3.json("/getVolcanoEvents",function(Da_vol_events){
-
-          let Data_earthquake ={type :"FeatureCollection", features : getGeoJSON_E(Da_ear)};
-          let Data_tsunami ={type :"FeatureCollection", features : getGeoJSON_T(Da_tsu)};
-          let Data_volcano ={type :"FeatureCollection", features: getGeoJSON_V(Da_vol,Da_vol_events)};
-          let Data_countries ={type :"FeatureCollection",features: Polygon_cleanCountries(countries)};
-          let Data_continents ={type :"FeatureCollection",features: Polygon_cleanContinent(continents)};
-          let Data_tect ={type :"FeatureCollection",features: Polygon_cleanTect(tect)};
-          let LimiteDate=RecupDate();
-          var Time_D_earthquake=DataTimed(Data_earthquake,LimiteDate);
-          var Time_D_tsunami=DataTimed(Data_tsunami,LimiteDate);
-          var Time_D_volcano=DataTimed(Data_volcano,LimiteDate);
-          var circle=L.circleMarker([0,0],{color:'red',radius:10});
-          $("#Date_ok").click(function(){
-            LimiteDate=RecupDate();
-            if (LimiteDate[0]>LimiteDate[1]){
-              let tmp =LimiteDate[0];
-              LimiteDate[0]=LimiteDate[1];
-              LimiteDate[1]=tmp;
-            }
-            if (LimiteDate[0].length ==0 || LimiteDate[1].length ==0){
-              LimiteDate[0]=0;
-              LimiteDate[1]=2021;
-            }
-            Time_D_earthquake=DataTimed(Data_earthquake,LimiteDate);
-            Time_D_tsunami=DataTimed(Data_tsunami,LimiteDate);
-            Time_D_volcano=DataTimed(Data_volcano,LimiteDate);
-          })
-          var style_polygons = {
-            "fillColor" :'white',
-            "color" : "#f55919",
-            "opacity" : 0.7,
-            "dashArray": '20,10'
-          };
-
-                //console.log(countries.features.length);
-                function onEachFeatureDelim(feature, layer){
-                    if (feature.properties && feature.properties.name) {
-                        layer.bindPopup(feature.properties.name);
-                        layer.on("click", function(event){
-                            mymap.fitBounds(event.target.getBounds());
-                        });
-                }
-                };
-                function onEachFeatureEvent (feature, layer) {
-                    layer.bindPopup(feature.properties.comments);
-                }
-                var layer=L.geoJSON(Data_countries,{onEachFeature: onEachFeatureDelim}).addTo(mymap);
-                layer.setStyle(style_polygons);
-                var layerTsunami=L.geoJSON(false,
-                    {pointToLayer: function(feature, latlng){
-                      var MarkerTsu = L.AwesomeMarkers.icon({
-                        icon: 'tint',
-                        markerColor: 'darkblue',
-                        prefix:'fa',
-                        iconColor:'white',
-                    });
-                    return L.marker(latlng,{icon: MarkerTsu});
-                  },
-                  onEachFeature: onEachFeatureEvent
-                }).addTo(mymap);
-                var layerVolcano=L.geoJSON(false,
-                  {pointToLayer: function(feature, latlng){
-                    var MarkerVol = L.AwesomeMarkers.icon({
-                        icon:'fire',
-                        markerColor: 'darkred',
-                        prefix:'fa',
-                        iconColor:'white',
-                    });
-                    return L.marker(latlng,{icon: MarkerVol});
-                  },
-                  onEachFeature: onEachFeatureEvent
-                }).addTo(mymap);
-                var layerEarthquake=L.geoJSON(false,
-                  {pointToLayer: function(feature, latlng){
-                    var MarkerEar = L.AwesomeMarkers.icon({
-                        icon:'globe',
-                        markerColor: 'beige',
-                        prefix:'fa',
-                        iconColor:'black',
-                    });
-                    return L.marker(latlng,{icon: MarkerEar});
-                  },
-                  onEachFeature: onEachFeatureEvent
-                }).addTo(mymap);
-
-                // Choix des séparations
-                $("#sep_btn").click(function(){
-                    var val = $("#select_sep").val();
-                    if(val == "P"){
-                      layerTsunami.clearLayers();
-                      layerEarthquake.clearLayers();
-                      layerVolcano.clearLayers();
-                      layer.clearLayers();
-                      layer.addData(Data_countries);
-                      layer.setStyle(style_polygons);
-                      mymap.setView(AutoCenter, AutoZoom);
-                    }else if(val == "C"){
-                      layerTsunami.clearLayers();
-                      layerEarthquake.clearLayers();
-                      layerVolcano.clearLayers();
-                      layer.clearLayers();
-                      layer.addData(Data_continents);
-                      layer.setStyle(style_polygons);
-                      mymap.setView(AutoCenter, AutoZoom);
-                    }
-                    else if(val == "T"){
-                      layerTsunami.clearLayers();
-                      layerEarthquake.clearLayers();
-                      layerVolcano.clearLayers();
-                      layer.clearLayers();
-                      layer.addData(Data_tect);
-                      layer.setStyle(style_polygons);
-                      mymap.setView(AutoCenter, AutoZoom);
-                    }
-                });
-                d3.select("#ClearDelim")
-                    .on("click",function(){
-                        layer.clearLayers();
-                });
-                //
-                $("#event_btn").click(function(){
-
-                    layerTsunami.clearLayers();
-                    layerEarthquake.clearLayers();
-                    layerVolcano.clearLayers();
-
-                    // Récupération des valeurs dans les différents inputs
-                    if($("#eq_event").is(":checked")) var eq = true;
-                    else var eq = false;
-                    if($("#tsu_event").is(":checked")) var tsu = true;
-                    else var tsu = false;
-                    if($("#vol_event").is(":checked")) var vol = true;
-                    else var vol = false;
-                    // Choses à faire avec les infos...
-                    if(mymap.getZoom()!=AutoZoom && mymap.getCenter().lat!=AutoCenter[0] && mymap.getCenter().lng!=AutoCenter[1]){
-                      if(eq){
-                          layerEarthquake.addData(Time_D_earthquake);
-
-                          for (let i=0;i<Time_D_earthquake.features.length;i++){
-                            if (Time_D_earthquake.features[i].properties.gravity==1){
-                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:12});
-                            } else if(Time_D_earthquake.features[i].properties.gravity==2){
-                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:25});
-                            } else if (Time_D_earthquake.features[i].properties.gravity==3){
-                              circle = L.circleMarker([Time_D_earthquake.features[i].geometry.coordinates[1],Time_D_earthquake.features[i].geometry.coordinates[0]],{color:'darkgoldenrod',radius:35});
-                            }
-                            circle.addTo(layerEarthquake);
-                          }
-                      }
-                      if(tsu){
-                          layerTsunami.addData(Time_D_tsunami);
-                          for (let i=0;i<Time_D_tsunami.features.length;i++){
-                            if (Time_D_tsunami.features[i].properties.gravity==1){
-                              circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:12});
-                            } else if(Time_D_tsunami.features[i].properties.gravity==2){
-                              circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:25});
-                            } else if (Time_D_tsunami.features[i].properties.gravity==3){
-                              circle = L.circleMarker([Time_D_tsunami.features[i].geometry.coordinates[1],Time_D_tsunami.features[i].geometry.coordinates[0]],{color:'darkblue',radius:35});
-                            }
-                            circle.addTo(layerTsunami);
-                          }
-                      }
-                      if(vol){
-                          layerVolcano.addData(Time_D_volcano);
-                          for (let i=0;i<Time_D_volcano.features.length;i++){
-                            if (Time_D_volcano.features[i].properties.gravity==1){
-                              circle = L.circleMarker([Time_D_volcano.features[i].geometry.coordinates[1],Time_D_volcano.features[i].geometry.coordinates[0]],{color:'darkred',radius:12});
-                            } else if(Time_D_volcano.features[i].properties.gravity==2){
-                              circle = L.circleMarker([Time_D_volcano.features[i].geometry.coordinates[1],Time_D_volcano.features[i].geometry.coordinates[0]],{color:'darkred',radius:25});
-                            } else if (Time_D_volcano.features[i].properties.gravity==3){
-                              circle = L.circleMarker([Time_D_volcano.features[i].geometry.coordinates[1],Time_D_volcano.features[i].geometry.coordinates[0]],{color:'darkred',radius:35});
-                            }
-                            circle.addTo(layerVolcano);
-                          }
-                      }
-                    }
-                });
-                d3.select("#ClearEvents")
-                    .on("click",function() {
-                      layerTsunami.clearLayers();
-                      layerEarthquake.clearLayers();
-                      layerVolcano.clearLayers();
-                    });
-                });
-            });
-        });
-        });
-        });
-        });
-        });
-
-</script>
